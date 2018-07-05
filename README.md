@@ -16,4 +16,6 @@ The 'strainGauge.py' class was build up to create a model of this object with th
 As the strain gauge observation equation is not linear, it's essential to make use the Extended Kalman Filter, mainly for its non-linearity processes capability. In this project, it was considered to use the analytical form of the function's first derivative to update the filtering process.
 
 ## Deployment
-You may run the file main.py and see the graphs supposed to give you the filtered signal of a strain gauge, without deflection. Starting from the "Parameters" file section, you may change the constants used to generate the model.
+You may run the file main.py and see the graphs supposed to give you the filtered signal of a strain gauge, without deflection. Starting from the "Parameters" file section, you may change the constants used to generate the model. Below, ther's an example of a picture generated from the simulation process.
+
+![Strain Gauge Simulation](simulation.png)
