@@ -7,7 +7,7 @@
 import kalman
 import random
 import numpy as np
-import strainGauge as sg
+import InstrumentGenerator as ig
 import matplotlib.pyplot as plt
 
 
@@ -30,7 +30,7 @@ dt = t[2] - t[1]                               # Passo de Tempo
 #cov_ym = 45*100*c**2
 #y_m = y_r + np.random.randn(len(y_r))*np.sqrt(cov_ym)
 
-Res = sg.StrainGauge()
+Res = ig.StrainGauge()
 Res.rho = random.gauss(10,1)
 
 def simFunction(x):
