@@ -13,7 +13,7 @@ class StrainGauge:
     def __init__(self, Rzero = 200, c = 0.2):
         self.Rzero  = Rzero
         self.c      = c
-        self.rho    = self.rho()
+        #self.rho    = self.rho()
         pass
 
     # Gera um valor de raio de curvatura de distribuição normal
@@ -46,7 +46,7 @@ class StrainGauge:
 
     # Função que cria um array de dados simulados de resistencia
     def simulateArray(self, n):
-        multiplier = []
+        #multiplier = []
         self.array = []
         self.arrayPerfect = []
         self.exactStateArray = []
@@ -69,7 +69,41 @@ class ObservationError(StrainGauge):
     def __init__(self):
         pass
 
-# Testes
+class RandomVariable(object):
+
+    distributions = ['notRandom','gauss','uniform']
+
+    def __init__(self, mean, std = 0, dist = 'notRandom'):
+        
+        if dist not in distributions:
+            print('Variável ' + __str__ + ' não pode assumir distribuição do tipo ' + dist + '.')
+        
+        self.mean = mean
+        self.std = std
+        
+        pass
+
+    def __call__(self):
+
+        if (dist == 'gaussian'):
+            return random.gauss(self.mean, self.std)
+        if (dist == 'uniform'):
+            return random.uniform(self.mean, self.std)
+        else:
+            return self.mean
+
+
+
+
+if __name__ == '__main__':
+    R = StrainGauge()
+    #random.gauss(12)
+    n = RandomVariable(2,1)
+    n()
+
+
+
+
 """n = 1000
 R = StrainGauge()
 R.simulate_array(n)
