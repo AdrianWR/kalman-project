@@ -28,16 +28,16 @@ class ExtendedKalmanFilter:
 
         def HK(x):
                return x
-                                
+
         def propagate(self):
-                
+
                 x = self.x
                 P = self.P
                 Fk = self.Fk
                 HK = self.HK
                 Q = self.Q
                 R = self.R
-                                
+
                 self.x = Fk*x
                 self.P = Fk*P*Fk.T + Q
                 #self.K = P*HK(x).T
@@ -52,7 +52,7 @@ class ExtendedKalmanFilter:
                 HK = self.HK
                 Q = self.Q
                 R = self.R
-                
+
                 I = np.eye(x.shape[0])
                 self.K = P*HK(x).T
                 self.K = self.K/(HK(x)*P*HK(x).T+R)

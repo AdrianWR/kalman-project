@@ -17,7 +17,7 @@ t0 = 0             # Tempo inicial
 tf = 100           # Tempo final
 R0 = 200           # Resistencia inicial, em ohm, sem extensao
 rho0 = 8*R0*c      # Raio de curvatura inicial - 320 cm
-n = 201           # Pontos para discretizacao
+n = 201            # Pontos para discretizacao
 
 t = np.linspace(t0, tf, n, endpoint=True)    # Vetor de tempos
 dt = t[2] - t[1]                               # Passo de Tempo
