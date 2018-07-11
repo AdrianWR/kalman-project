@@ -16,32 +16,57 @@ class StrainGauge:
         self.rho    = 8*Rzero*c
         pass
 
+    def rho(self)
+
     # Função de teste simulando variação de resistência com o tempo.
     def simFunction(t):
-        return t
+        return 1
         
     # Função que retorna o valor da Resistencia levando os erros em conta
-    def simulate(self):
-        Gf = random.gauss(8,1)  # O coeficiente de extensometria é Gf, com mu = 8 e sigma = 1
-        R = Gf*self.Rzero*self.c/self.rho + self.Rzero
+    def realData(self, rho):
+        Gf = random.gauss(8,1)
+        #Rzero = random.gauss(200, 10)
+        Rzero = self.Rzero
+        c = self.c
+        R = Gf*Rzero*c/rho + Rzero
         return R
 
     # Função que retorna o valor da Resistencia sem erros associados
-    def perfect(self):
+    def exactData(self, rho):
         Gf = 8
-        R = Gf*self.Rzero*self.c/self.rho + self.Rzero
+        R = Gf*self.Rzero*self.c/rho + self.Rzero
         return R
 
+    def exactStateData(self, R):
+        Gf = 8
+        rho = (Gf*self.Rzero*self.c)/(R-self.Rzero)
+        return rho
+
     # Função que cria um array de dados simulados de resistencia    
-    def simulate_array(self, n):
+    def simulateArray(self, n):
+        multiplier = []
         self.array = []
         self.arrayPerfect = []
+        self.exactStateArray = []
+        diferences = []
         for i in range(0, n):
-            self.array.append(self.simFunction(self.simulate()))
-            #self.array.append(self.simulate())
-            self.arrayPerfect.append(self.simFunction(self.perfect()))
-        self.mean = np.mean(self.array)
-        self.var = np.var(self.array)
+            multiplier = self.simFunction(i)
+            simu_sample = multiplier*self.realData(self.rho)
+            perf_sample = multiplier*self.exactData(self.rho)
+            self.array.append(simu_sample)
+            self.arrayPerfect.append(perf_sample)
+            self.exactStateArray.append(self.exactStateData(perf_sample))
+            diferences.append(simu_sample - perf_sample)
+        self.errorMean = np.mean(diferences)
+        self.errorVar = np.var(diferences)
+        pass
+
+
+
+class ObservationError(StrainGauge):
+
+    def __init__(self):
+        pass
 
 # Testes
 """n = 1000

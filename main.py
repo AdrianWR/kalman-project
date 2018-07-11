@@ -5,6 +5,7 @@
 # deve ser extendido, devido a nao-linearidade do problema.
 
 import kalman
+import random
 import numpy as np
 import strainGauge as sg
 import matplotlib.pyplot as plt
@@ -16,7 +17,7 @@ t0 = 0             # Tempo inicial
 tf = 100           # Tempo final
 R0 = 200           # Resistencia inicial, em ohm, sem extensao
 rho0 = 8*R0*c      # Raio de curvatura inicial - 320 cm
-n = 1001           # Pontos para discretizacao
+n = 201           # Pontos para discretizacao
 
 t = np.linspace(t0, tf, n, endpoint=True)    # Vetor de tempos
 dt = t[2] - t[1]                               # Passo de Tempo
@@ -30,17 +31,20 @@ dt = t[2] - t[1]                               # Passo de Tempo
 #y_m = y_r + np.random.randn(len(y_r))*np.sqrt(cov_ym)
 
 Res = sg.StrainGauge()
-Res.rho = 160
+Res.rho = random.gauss(10,1)
 
 def simFunction(x):
-    y = x
+    #y = np.sin(0.25*x)
+    y = 1
+    #y = 1.0001*x
+    #y = random.gauss(0,2)*x
     return y
 
 Res.simFunction = simFunction
-Res.simulate_array(n)        # Offline
+Res.simulateArray(n)        # Offline
 y_r = Res.arrayPerfect
 y_m = Res.array
-cov_ym = Res.var
+cov_ym = Res.errorVar
 
 
 ####  Kalman
@@ -61,19 +65,20 @@ def HK(x):
     return dR
 
 # Inicializar objeto de filtro
-x0 = np.array([5])
+x0 = np.array([1])
 P0 = np.array([1])
 Fk = np.array([1])
 R = np.array([10])
-Q = np.array([10])
+Q = np.array([0.01])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.h = h
 Filter.HK = HK
 Filter.filter(y_m)
 
-radius_theoretical = ((8*R0*c)/(Res.perfect()-R0))
-radius_theoretical = np.ones(n)*radius_theoretical
+#radius_theoretical = ((8*R0*c)/(Res.arrayPerfect-R0*np.ones(n)))
+#radius_theoretical = np.ones(n)*radius_theoretical
+radius_theoretical = Res.exactStateArray
 radius_filter = Filter.signal
 
 
@@ -86,7 +91,7 @@ plt.plot(t,y_m,'r.', label = 'R- Observação')
 plt.title('Resistência do Extensômetro')
 plt.legend()
 
-plt.subplot(2,1,2)
+plt.subplot(212)
 plt.plot(t, radius_filter,'m-', label = 'Raio de Curvatura - Filtro')
 plt.plot(t, radius_theoretical, label = 'Raio de Curvatura - Teórico');
 plt.title('Raio de Curvatura')
