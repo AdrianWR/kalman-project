@@ -8,12 +8,15 @@ import random
 
 
 #ADICIONAR erro de medida vk
+# StrainGauge class will be capable to receive random variables in __init__
 class StrainGauge:
 
-    def __init__(self, Rzero = 200, c = 0.2):
+    def __init__(self, Rzero, c, rho, Gf):
+
         self.Rzero  = Rzero
         self.c      = c
-        #self.rho    = self.rho()
+        self.rho    = rho
+        self.Gf     = Gf
         pass
 
     # Gera um valor de raio de curvatura de distribuição normal
@@ -25,13 +28,16 @@ class StrainGauge:
         return 1
 
     # Função que retorna o valor da Resistencia levando os erros em conta
-    def realData(self, rho):
-        Gf = random.gauss(8,1)
-        Rzero = random.gauss(200, 10)
-        #Rzero = self.Rzero
-        c = self.c
-        R = Gf*Rzero*c/rho + Rzero
-        return R
+    def realizeData(self):
+        try:
+            return self.Gf()*self.Rzero()*self.c()/self.rho() + self.Rzero()
+        except TypeError:
+            for i in vars(self):
+                if type(vars(self)[i]) == int:
+                    RandomVariable(vars(self)[i])
+            
+            print('No!')
+
 
     # Função que retorna o valor da Resistencia sem erros associados
     def exactData(self, rho):
@@ -71,14 +77,12 @@ class ObservationError(StrainGauge):
 
 class RandomVariable():
 
-    
-
     def __init__(self, mean, std = 0, dist = 'notRandom'):
         
-        distributions = ['notRandom','gauss','uniform']
+        distributions = ['notRandom','gaussian','uniform']
 
         if dist not in distributions:
-            print('Variável ' + __str__ + ' não pode assumir distribuição do tipo ' + dist + '.')
+            print('Variável ' + __name__ + ' não pode assumir distribuição do tipo ' + dist + '.')
         
         self.mean = mean
         self.std = std
@@ -90,32 +94,20 @@ class RandomVariable():
 
         if (self.dist == 'gaussian'):
             return random.gauss(self.mean, self.std)
-        if (self.dist == 'uniform'):
+        elif (self.dist == 'uniform'):
             return random.uniform(self.mean, self.std)
         else:
             return self.mean
 
 
 
-
 if __name__ == '__main__':
-    #R = StrainGauge()
+    
     #random.gauss(12)
-    n = RandomVariable(2,1)
-    n()
-    #print(2)
+    Rzero = RandomVariable(2,1,'gaussian')
+    rho   = RandomVariable(10, 0.5, 'gaussian')
+    Gf    = RandomVariable(8,1,'gaussian')
+    #c     = RandomVariable(2)
+    c = 3
+    R = StrainGauge(Rzero, c, rho, Gf)
 
-
-
-
-"""n = 1000
-R = StrainGauge()
-R.simulate_array(n)
-print(R.mean)
-
-import matplotlib.pyplot as plt
-plt.plot(R.arrayPerfect,'k', label = 'R - Modelo')
-plt.plot(R.array,'r.', label = 'R - Observação')
-plt.title('Resistência do Extensômetro')
-plt.legend()
-plt.show()"""
