@@ -8,71 +8,65 @@ import random
 
 
 #ADICIONAR erro de medida vk
+
 # StrainGauge class will be capable to receive random variables in __init__
+# If a int is inputed, it'll be transformed into a random variable with std = 0
 class StrainGauge:
 
-    def __init__(self, Rzero, c, rho, Gf):
+    def __init__(self, Rzero, c, rho, Gf, n = 0):
 
         self.Rzero  = Rzero
         self.c      = c
         self.rho    = rho
         self.Gf     = Gf
+        self.n      = n
+
+        for i in vars(self):
+                if type(vars(self)[i]) == int:
+                    vars(self)[i] = RandomVariable(vars(self)[i])
+                elif type(vars(self)[i]) != RandomVariable:
+                    print('Input ' + vars(self)[i] + " must be either of 'int' or 'RandomVariable' type.")
+                    raise SystemExit
+                else:
+                    pass
+        
+        self.array = []
         pass
 
-    # Gera um valor de raio de curvatura de distribuição normal
-    def rho(self, mean = 10, std = 0.5):
-        return random.gauss(mean, std)
+    
 
-    # Função de teste simulando variação de resistência com o tempo.
-    def simFunction(self, t):
-        return 1
+    #def __setattr__(self, n, x):
+    #    print('n changes')
+    #    if (self.n.mean != 0):
+    #        self.realizeArray(self.n.mean)
+    #    pass
 
-    # Função que retorna o valor da Resistencia levando os erros em conta
+    # Realize observable data from input parameters.
     def realizeData(self):
         try:
             return self.Gf()*self.Rzero()*self.c()/self.rho() + self.Rzero()
         except TypeError:
-            for i in vars(self):
-                if type(vars(self)[i]) == int:
-                    RandomVariable(vars(self)[i])
-            
-            print('No!')
+            print('Something went wrong, check variable types.')
 
+    # Return state variable rho from observable data R and input parameters
+    #def realizeStateData(self, R):
+    #    return (self.Gf*self.Rzero*self.c)/(R-self.Rzero)
 
-    # Função que retorna o valor da Resistencia sem erros associados
-    def exactData(self, rho):
-        Gf = 8
-        R = Gf*self.Rzero*self.c/rho + self.Rzero
-        return R
+    # Simulation of the multiplier function. Could be change from outside.
+    def simFunction(self, t):
+        return 1
 
-    def exactStateData(self, R):
-        Gf = 8
-        rho = (Gf*self.Rzero*self.c)/(R-self.Rzero)
-        return rho
-
-    # Função que cria um array de dados simulados de resistencia
-    def simulateArray(self, n):
-        #multiplier = []
-        self.array = []
-        self.arrayPerfect = []
-        self.exactStateArray = []
-        diferences = []
+    # Generate n-th array with data realized from parameters
+    def realizeArray(self, n):        
         for i in range(0, n):
-            rho = self.rho()
             multiplier = self.simFunction(i)
-            simu_sample = multiplier*self.realData(rho)
-            perf_sample = multiplier*self.exactData(rho)
-            self.array.append(simu_sample)
-            self.arrayPerfect.append(perf_sample)
-            self.exactStateArray.append(self.exactStateData(perf_sample))
-            diferences.append(simu_sample - perf_sample)
-        self.errorMean = np.mean(diferences)
-        self.errorVar = np.var(diferences)
+            self.array.append(multiplier*self.realizeData())
+            #self.stateArray.append(multiplier*self.realizeStateData())
         pass
 
-class ObservationError(StrainGauge):
-
-    def __init__(self):
+class ApproximationError(StrainGauge):
+    
+    def __init__():
         pass
 
 class RandomVariable():
@@ -87,7 +81,6 @@ class RandomVariable():
         self.mean = mean
         self.std = std
         self.dist = dist
-
         pass
 
     def __call__(self):
@@ -98,6 +91,8 @@ class RandomVariable():
             return random.uniform(self.mean, self.std)
         else:
             return self.mean
+        pass
+        
 
 
 
@@ -107,7 +102,8 @@ if __name__ == '__main__':
     Rzero = RandomVariable(2,1,'gaussian')
     rho   = RandomVariable(10, 0.5, 'gaussian')
     Gf    = RandomVariable(8,1,'gaussian')
-    #c     = RandomVariable(2)
-    c = 3
-    R = StrainGauge(Rzero, c, rho, Gf)
-
+    c     = RandomVariable(2)
+    n = 50
+    #c = 'paçoca'
+    R = StrainGauge(Rzero, c, rho, Gf, n)
+    print('ok')
