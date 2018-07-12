@@ -1,26 +1,27 @@
 import numpy as np
 import random
 
-# Esta classe cria um objeto Extensometro, simulando parametros fisicos
-# do instrumento. As constantes inicializaveis podem ser alteradas após
-# a instanciação do objeto, sendo as principais Resistencia Inicial (Rzero),
-# meia altura do extensometro (c) e raio de curvatura (rho).
+# This class creates a strain gauge instrument model, simulating its physical properties.
+# Properties can be given as parameters after instantiation, but is heavily advised
+# to initialize them at object's creation. If Rzero, c, rho and Gf are assigned as 'int'
+# type variables, __setattr__ special method will transform them to RandomVariable type
+# with mean = value and std = 0.
 
+# PROPERTIES SUMMARY
+# Rzero: Initial value of strain gauge resistance.  RandomVariable type
+# c: Half height of strain gauge.                   RandomVariable type
+# rho: radius of curvature taken from strain gauge. RandomVariable type
+# Gf: Instrument gauge factor.                      RandomVariable type
+# n: number of measurements to take                 int type   
 
-#ADICIONAR erro de medida vk
+class StrainGauge(object):
 
-# StrainGauge class will be capable to receive random variables in __init__
-# If a int is inputed, it'll be transformed into a random variable with std = 0
-class StrainGauge:
-
-    def __init__(self, Rzero, c, rho, Gf, n = 0):
+    def __init__(self, Rzero, c, rho, Gf, n = None):
 
         self.Rzero  = Rzero
         self.c      = c
         self.rho    = rho
         self.Gf     = Gf
-        self.n      = n
-
         for i in vars(self):
                 if type(vars(self)[i]) == int:
                     vars(self)[i] = RandomVariable(vars(self)[i])
@@ -30,16 +31,27 @@ class StrainGauge:
                 else:
                     pass
         
+        self.n     = n
         self.array = []
+        pass    
+
+    # As number of samples 'n' is assigned, create samples array as object property 
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        if name == 'n':
+            try:
+                if value == None:
+                    pass
+                elif type(value) == int:
+                    print('n changes')
+                    self.realizeArray(value)
+                else:
+                    print('Number of samples must be an integer value.')
+                    raise SystemExit
+            except:
+                print("Something went wrong. Try 'n' as 'int' and 'n' > 0")
+                raise SystemExit 
         pass
-
-    
-
-    #def __setattr__(self, n, x):
-    #    print('n changes')
-    #    if (self.n.mean != 0):
-    #        self.realizeArray(self.n.mean)
-    #    pass
 
     # Realize observable data from input parameters.
     def realizeData(self):
@@ -66,16 +78,16 @@ class StrainGauge:
 
 class ApproximationError(StrainGauge):
     
-    def __init__():
+    def __init__(self):
         pass
 
 class RandomVariable():
 
     def __init__(self, mean, std = 0, dist = 'notRandom'):
         
-        distributions = ['notRandom','gaussian','uniform']
+        _distributions = ['notRandom','gaussian','uniform']
 
-        if dist not in distributions:
+        if dist not in _distributions:
             print('Variável ' + __name__ + ' não pode assumir distribuição do tipo ' + dist + '.')
         
         self.mean = mean
@@ -94,8 +106,7 @@ class RandomVariable():
         pass
         
 
-
-
+# Class Testing Area
 if __name__ == '__main__':
     
     #random.gauss(12)
