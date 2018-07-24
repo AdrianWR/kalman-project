@@ -16,105 +16,134 @@ import random
 
 class StrainGauge(object):
 
-    def __init__(self, Rzero, c, rho, Gf, n = None):
+    def __init__(self, Rzero, c, rho, Gf, deviation = 0, n = 0):
 
-        self.Rzero  = Rzero
-        self.c      = c
-        self.rho    = rho
-        self.Gf     = Gf
+        self.Rzero      = Rzero
+        self.c          = c
+        self.rho        = rho
+        self.Gf         = Gf
+        self.deviation  = deviation
+
         for i in vars(self):
                 if type(vars(self)[i]) == int:
                     vars(self)[i] = RandomVariable(vars(self)[i])
                 elif type(vars(self)[i]) != RandomVariable:
                     print('Input ' + vars(self)[i] + " must be either of 'int' or 'RandomVariable' type.")
                     raise SystemExit
-                else:
-                    pass
         
         self.n     = n
-        self.array = []
-        pass    
 
     # As number of samples 'n' is assigned, create samples array as object property 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         if name == 'n':
             try:
-                if value == None:
-                    pass
-                elif type(value) == int:
-                    print('n changes')
-                    self.realizeArray(value)
+                if type(value) == int:
+                    if value <= 0:
+                        raise ValueError('The number of samples must be a positive integer.')
+                    else:
+                        self.realizeArray(value)
                 else:
-                    print('Number of samples must be an integer value.')
-                    raise SystemExit
-            except:
-                print("Something went wrong. Try 'n' as 'int' and 'n' > 0")
-                raise SystemExit 
-        pass
+                    raise TypeError('The number of samples must be an integer value.')
+            except Exception as error:
+                print(repr(error))
+                raise SystemExit
 
     # Realize observable data from input parameters.
     def realizeData(self):
         try:
-            return self.Gf()*self.Rzero()*self.c()/self.rho() + self.Rzero()
+            return self.Gf()*self.Rzero()*self.c()/self.rho() + self.Rzero() + self.deviation()
         except TypeError:
             print('Something went wrong, check variable types.')
 
-    # Return state variable rho from observable data R and input parameters
-    #def realizeStateData(self, R):
-    #    return (self.Gf*self.Rzero*self.c)/(R-self.Rzero)
-
-    # Simulation of the multiplier function. Could be change from outside.
+    # Simulation of the multiplier function. May be changed from outside.
     def simFunction(self, t):
         return 1
 
     # Generate n-th array with data realized from parameters
-    def realizeArray(self, n):        
+    def realizeArray(self, n):
+        self.array = np.zeros(n)        
         for i in range(0, n):
             multiplier = self.simFunction(i)
-            self.array.append(multiplier*self.realizeData())
-            #self.stateArray.append(multiplier*self.realizeStateData())
-        pass
+            self.array[i] = multiplier*self.realizeData()
 
-class ApproximationError(StrainGauge):
+
+
+# This class defines a random variable data type to be used during the simulations. With its help, it's possible to
+# create random controlled data based on statistic distributions and non-Random data (in the case of exact realizations).
+# To generate random doubles based on the distributions, call the instance as method (__call__).
+
+# PROPERTIES SUMMARY:
+# mean: Mean value of the distribution, or exact value regarding non random data.
+# std: Populational standard deviation of distribution. If declared to non random data, its value is ignored.
+# var: Distribution variance. Ignored regarding non random data.
+# dist: Distribution type to be used. May be assigned as 'gaussian', 'uniform' or 'nonRandom' (default value).
+
+# METHODS SUMMARY:
+# __call__(): Generate random data each time it's called.
+# uniformLowHigh: Update 'mean' and 'std' properties to use 'low' and 'high' distribution parameters in 'uniform'.
+
+class RandomVariable(object):
+
+    def __init__(self, mean = 0, std = 0, dist = 'nonRandom'):
     
-    def __init__(self):
-        pass
-
-class RandomVariable():
-
-    def __init__(self, mean, std = 0, dist = 'notRandom'):
-        
-        _distributions = ['notRandom','gaussian','uniform']
+        _distributions = ['nonRandom','gaussian','uniform']
 
         if dist not in _distributions:
             print('Variável ' + __name__ + ' não pode assumir distribuição do tipo ' + dist + '.')
         
         self.mean = mean
         self.std = std
+        self.var = std**2
         self.dist = dist
-        pass
 
     def __call__(self):
 
         if (self.dist == 'gaussian'):
             return random.gauss(self.mean, self.std)
         elif (self.dist == 'uniform'):
-            return random.uniform(self.mean, self.std)
+            return random.uniform(self.mean-self.std*np.sqrt(3),self.mean+self.std*np.sqrt(3))
         else:
             return self.mean
         pass
-        
 
+    def uniformLowHigh(self, low, high):
+        
+        if (self.dist == 'uniform'):
+            self.mean = (low + high)/2
+            self.std = (high-low)/(np.sqrt(12))
+            self.var = (self.std)**2
+        else:
+            raise TypeError("Distribution must be 'uniform' to call this method.")
+
+# Inherited class from RandomVariable.
+# Calculate the Aproximation Error based on two instances of StrainGauge class.
+# As a result, can be called as RandomVariable, with its own 'mean' and 'std' (gaussian distribution).
+
+class ApproximationError(RandomVariable):
+    
+    def __init__(self, strainGauge1, strainGauge2):
+        
+        self.epsilonArray = strainGauge1.array - strainGauge2.array
+        RandomVariable.__init__(self, self.epsilonArray.mean(), self.epsilonArray.std(),'gaussian')
+        pass       
+
+# ##################
 # Class Testing Area
+# ##################
 if __name__ == '__main__':
     
-    #random.gauss(12)
     Rzero = RandomVariable(2,1,'gaussian')
+    c     = RandomVariable(2)
     rho   = RandomVariable(10, 0.5, 'gaussian')
     Gf    = RandomVariable(8,1,'gaussian')
-    c     = RandomVariable(2)
+    dev   = RandomVariable(dist = 'uniform')
+    dev.uniformLowHigh(-5,5) 
+
     n = 50
     #c = 'paçoca'
-    R = StrainGauge(Rzero, c, rho, Gf, n)
+    R1 = StrainGauge(Rzero, c, rho, Gf, n = 50)
+    R2 = StrainGauge(3,2,10,8, dev, n = 50)
+    eps = ApproximationError(R1, R2)
+
     print('ok')
