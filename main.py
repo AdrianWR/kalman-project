@@ -10,17 +10,18 @@ import numpy as np
 import InstrumentGenerator as ig
 import matplotlib.pyplot as plt
 
+# Models
+Rzero = ig.RandomVariable(200, 10, 'gaussian')    # initial resistance
+c     = ig.RandomVariable(0.2)                    # strain gauge half length (mm)
+rho   = ig.RandomVariable(320)                    # radius of curvature
+Gf    = ig.RandomVariable(10, 1, 'gaussian')      # gauge factor
 
-# Parametros do Modelo
-c = 0.2            # Meia-altura maxima do extensometro, em cm
-t0 = 0             # Tempo inicial
-tf = 100           # Tempo final
-R0 = 200           # Resistencia inicial, em ohm, sem extensao
-rho0 = 8*R0*c      # Raio de curvatura inicial - 320 cm
-n = 201            # Pontos para discretizacao
+n = 201            # Number of samples
 
-t = np.linspace(t0, tf, n, endpoint=True)    # Vetor de tempos
-dt = t[2] - t[1]                               # Passo de Tempo
+# t0 = 0             # Tempo inicial
+# tf = 100           # Tempo final
+# t = np.linspace(t0, tf, n, endpoint=True)    # Vetor de tempos
+# dt = t[2] - t[1]                               # Passo de Tempo
 
 ## Simulação do Observador
 
@@ -30,8 +31,8 @@ dt = t[2] - t[1]                               # Passo de Tempo
 #cov_ym = 45*100*c**2
 #y_m = y_r + np.random.randn(len(y_r))*np.sqrt(cov_ym)
 
-Res = ig.StrainGauge()
-Res.rho = random.gauss(10,1)
+#Res = ig.StrainGauge()
+#Res.rho = random.gauss(10,1)
 
 def simFunction(x):
     #y = np.sin(0.25*x)
@@ -93,7 +94,7 @@ plt.legend()
 
 plt.subplot(212)
 plt.plot(t, radius_filter,'m-', label = 'Raio de Curvatura - Filtro')
-plt.plot(t, radius_theoretical, label = 'Raio de Curvatura - Teórico');
+plt.plot(t, radius_theoretical, label = 'Raio de Curvatura - Teórico')
 plt.title('Raio de Curvatura')
 plt.legend()
 
