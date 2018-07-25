@@ -16,20 +16,21 @@ import random
 
 class StrainGauge(object):
 
-    def __init__(self, Rzero, c, rho, Gf, deviation = 0, n = 0):
+    def __init__(self, Rzero, c, rho, Gf, err = 0, n = 0):
 
         self.Rzero      = Rzero
         self.c          = c
         self.rho        = rho
         self.Gf         = Gf
-        self.deviation  = deviation
+        self.err  = err
 
         for i in vars(self):
-                if type(vars(self)[i]) == int:
-                    vars(self)[i] = RandomVariable(vars(self)[i])
-                elif type(vars(self)[i]) != RandomVariable:
-                    print('Input ' + vars(self)[i] + " must be either of 'int' or 'RandomVariable' type.")
-                    raise SystemExit
+            if (type(vars(self)[i]) == int or type(vars(self)[i]) == float):
+                vars(self)[i] = RandomVariable(vars(self)[i])
+        #   elif (type(vars(self)[i]) != RandomVariable or type(vars(self)[i]) != ApproximationError):
+        #       print('Input ' + vars(self)[i] + " must be either of 'int' or 'RandomVariable' type.")
+        #   else:
+        #       raise SystemExit
         
         self.n     = n
 
@@ -49,10 +50,13 @@ class StrainGauge(object):
                 print(repr(error))
                 raise SystemExit
 
+
     # Realize observable data from input parameters.
     def realizeData(self):
         try:
-            return self.Gf()*self.Rzero()*self.c()/self.rho() + self.Rzero() + self.deviation()
+            rho = self.rho()
+            R = self.Gf()*self.Rzero()*self.c()/self.rho() + self.Rzero() + self.err()
+            return np.array([rho, R])
         except TypeError:
             print('Something went wrong, check variable types.')
 
@@ -62,11 +66,14 @@ class StrainGauge(object):
 
     # Generate n-th array with data realized from parameters
     def realizeArray(self, n):
-        self.array = np.zeros(n)        
+        self.array = np.zeros(n)
+        self.stateArray = np.zeros(n)        
         for i in range(0, n):
-            multiplier = self.simFunction(i)
-            self.array[i] = multiplier*self.realizeData()
-
+            data = self.realizeData()
+            self.stateArray[i] = data[0]
+            self.array[i] = data[1]
+            #self.array[i] = self.simFunction(i)*self.realizeData()[1]
+            
 
 
 # This class defines a random variable data type to be used during the simulations. With its help, it's possible to
@@ -75,7 +82,7 @@ class StrainGauge(object):
 
 # PROPERTIES SUMMARY:
 # mean: Mean value of the distribution, or exact value regarding non random data.
-# std: Populational standard deviation of distribution. If declared to non random data, its value is ignored.
+# std: Populational standard err of distribution. If declared to non random data, its value is ignored.
 # var: Distribution variance. Ignored regarding non random data.
 # dist: Distribution type to be used. May be assigned as 'gaussian', 'uniform' or 'nonRandom' (default value).
 
@@ -124,8 +131,8 @@ class ApproximationError(RandomVariable):
     
     def __init__(self, strainGauge1, strainGauge2):
         
-        self.epsilonArray = strainGauge1.array - strainGauge2.array
-        RandomVariable.__init__(self, self.epsilonArray.mean(), self.epsilonArray.std(),'gaussian')
+        self.array = strainGauge1.array - strainGauge2.array
+        RandomVariable.__init__(self, self.array.mean(), self.array.std(),'gaussian')
         pass       
 
 # ##################

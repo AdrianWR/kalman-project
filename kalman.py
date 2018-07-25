@@ -8,7 +8,7 @@ import numpy as np
 # devem estar em formato Numpy Array. Métodos de validação
 # serão inseridos posteriormente.
 
-class ExtendedKalmanFilter:
+class ExtendedKalmanFilter(object):
 
         def __init__(self, x0, P0, Fk, R, Q):
 
@@ -23,10 +23,10 @@ class ExtendedKalmanFilter:
         # As funções h e HK podem ser alteradas no programa de filtragem.
         # Por default, observará o estado da variável x e sua derivada.
 
-        def h(x):
+        def h(self, x):
                return x
 
-        def HK(x):
+        def HK(self, x):
                return x
 
         def propagate(self):
@@ -34,9 +34,7 @@ class ExtendedKalmanFilter:
                 x = self.x
                 P = self.P
                 Fk = self.Fk
-                HK = self.HK
                 Q = self.Q
-                R = self.R
 
                 self.x = Fk*x
                 self.P = Fk*P*Fk.T + Q
@@ -48,9 +46,7 @@ class ExtendedKalmanFilter:
 
                 x = self.x
                 P = self.P
-                Fk = self.Fk
                 HK = self.HK
-                Q = self.Q
                 R = self.R
 
                 I = np.eye(x.shape[0])
