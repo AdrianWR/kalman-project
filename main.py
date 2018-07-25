@@ -96,7 +96,7 @@ Filter.filter(y_m)
 
 #radius_theoretical = ((8*R0*c)/(Res.arrayPerfect-R0*np.ones(n)))
 #radius_theoretical = np.ones(n)*radius_theoretical
-radius_theoretical = strainGauge.stateArray
+radius_theoretical = strainGaugePerfect.stateArray
 radius_filter = Filter.signal
 
 
