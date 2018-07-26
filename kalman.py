@@ -23,6 +23,9 @@ class ExtendedKalmanFilter(object):
         # As funções h e HK podem ser alteradas no programa de filtragem.
         # Por default, observará o estado da variável x e sua derivada.
 
+        def f(self, x):
+                return x
+
         def h(self, x):
                return x
 
@@ -36,7 +39,7 @@ class ExtendedKalmanFilter(object):
                 Fk = self.Fk
                 Q = self.Q
 
-                self.x = Fk*x
+                self.x = self.f(x)
                 self.P = Fk*P*Fk.T + Q
                 #self.K = P*HK(x).T
                 #self.K = self.K/(HK(x)*P*HK(x).T+R)
@@ -49,13 +52,11 @@ class ExtendedKalmanFilter(object):
                 HK = self.HK
                 R = self.R
 
-                I = np.eye(x.shape[0])
-                self.K = P*HK(x).T
-                self.K = self.K/(HK(x)*P*HK(x).T+R)
-                ## A derivada numerica poderia vir aqui
+                I = np.array([1.0])
+                self.K = (P*HK(x).T)/((HK(x)*P*HK(x).T+R))
                 self.x = self.x + self.K*(ym-h(self.x))
                 self.P = (I-self.K*self.HK(self.x))*self.P
-                self.P = (self.P+self.P.T)/2
+                #self.P = (self.P+self.P.T)/2
 
 
         def filter(self, observer):

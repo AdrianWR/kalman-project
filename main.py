@@ -72,36 +72,32 @@ cov_ym = strainGauge.array.var()
 
 ### Strain Gauge Process Equations
 
-# Função do Observador
+# Observer Function
 def h(x):  
     R = ((Gf*Rzero*c)/x) + Rzero + err.mean
     return R
 
-# Diferenciação do Observador
+# Observer Derivative Function
 def HK(x):
     dR = -(Gf*Rzero*c)/(x**2)
     return dR
 
-# Inicializar objeto de filtro
+# Filter Parameters
 x0 = np.array([300])
-P0 = np.array([1])
-Fk = np.array([1])
+P0 = np.array([0.1])
+Fk = np.array([0])
 R = np.array([cov_ym])
-Q = np.array([1])
+Q = np.array([1000])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.h = h
 Filter.HK = HK
 Filter.filter(y_m)
 
-#radius_theoretical = ((8*R0*c)/(Res.arrayPerfect-R0*np.ones(n)))
-#radius_theoretical = np.ones(n)*radius_theoretical
-radius_theoretical = strainGaugePerfect.stateArray
+radius_theoretical = strainGauge.stateArray
 radius_filter = Filter.signal
 
-
 ## Exibicao
-
 plt.figure(1)
 plt.subplot(211)
 plt.plot(y_r,'k', label = 'R - Modelo')
