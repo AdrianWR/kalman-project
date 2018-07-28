@@ -55,10 +55,12 @@ class ExtendedKalmanFilter(object):
 
                 I = np.array([1.0])
                 self.K = (P*HK(x).T)/((HK(x)*P*HK(x).T+R))
-                self.x = self.x + self.K*(ym-h(self.x))
-                self.P = (I-self.K*HK(x))*self.P
+                self.x = x + self.K*(ym-h(x))
+                #self.P = (I-self.K*HK(x))*P
+                # Joseph Form
+                self.P = (I-self.K*HK(x))*P*(I-self.K*HK(x)).T + P*self.Q*P.T
                 #self.P = (self.P+self.P.T)/2
-                #print(P)
+                #print(self.P)
 
         def filter(self, observer):
 

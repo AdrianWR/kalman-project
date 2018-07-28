@@ -38,7 +38,7 @@ err = ig.ApproximationError(sgApproximate,sgTrue)
 ###  SIMULATION ANALYSIS ###
 ############################
 
-n = 2001
+n = 1001
 strainGauge = ig.StrainGauge(Rzero, c, rho, Gf, err = err, n = n)
 strainGaugePerfect = ig.StrainGauge(Rzero, c, rho.mean, Gf, n = n)
 
@@ -72,9 +72,13 @@ cov_ym = strainGauge.array.var()
 
 ### Strain Gauge Process Equations
 
+# Process Function
+def f(x):
+    return x
+
 # Observer Function
 def h(x):  
-    R = ((Gf*Rzero*c)/x) + Rzero# + err.mean
+    R = ((Gf*Rzero*c)/x) + Rzero + err.mean
     return R
 
 # Observer Derivative Function
@@ -85,12 +89,13 @@ def HK(x):
 # Filter Parameters
 x0 = np.array([1])
 P0 = np.array([1])
-Fk = np.array([1])
-#R = np.array([cov_ym])
-R = np.array([0.01])
-Q = np.array([1])
+Fk = np.array([0])
+R = np.array([cov_ym])
+#R = np.array([0.001])
+Q = np.array([10000])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
+Filter.f = f
 Filter.h = h
 Filter.HK = HK
 Filter.filter(y_m)
