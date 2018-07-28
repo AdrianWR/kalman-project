@@ -87,7 +87,7 @@ def HK(x):
     return dR
 
 # Filter Parameters
-x0 = np.array([1])
+x0 = np.array([10])
 P0 = np.array([1])
 Fk = np.array([0])
 R = np.array([cov_ym])
