@@ -74,7 +74,7 @@ cov_ym = strainGauge.array.var()
 
 # Observer Function
 def h(x):  
-    R = ((Gf*Rzero*c)/x) + Rzero + err.mean
+    R = ((Gf*Rzero*c)/x) + Rzero# + err.mean
     return R
 
 # Observer Derivative Function
@@ -83,11 +83,12 @@ def HK(x):
     return dR
 
 # Filter Parameters
-x0 = np.array([300])
-P0 = np.array([0.1])
-Fk = np.array([0])
-R = np.array([cov_ym])
-Q = np.array([1000])
+x0 = np.array([1])
+P0 = np.array([1])
+Fk = np.array([1])
+#R = np.array([cov_ym])
+R = np.array([0.01])
+Q = np.array([1])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.h = h

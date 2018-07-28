@@ -45,19 +45,20 @@ class ExtendedKalmanFilter(object):
                 #self.K = self.K/(HK(x)*P*HK(x).T+R)
 
 
-        def update(self, h, ym):
+        def update(self, ym):
 
                 x = self.x
                 P = self.P
+                h = self.h
                 HK = self.HK
                 R = self.R
 
                 I = np.array([1.0])
                 self.K = (P*HK(x).T)/((HK(x)*P*HK(x).T+R))
                 self.x = self.x + self.K*(ym-h(self.x))
-                self.P = (I-self.K*self.HK(self.x))*self.P
+                self.P = (I-self.K*HK(x))*self.P
                 #self.P = (self.P+self.P.T)/2
-
+                #print(P)
 
         def filter(self, observer):
 
@@ -65,6 +66,6 @@ class ExtendedKalmanFilter(object):
                 self.signal = []
                 for i in range(0,n):
                         self.propagate()
-                        self.update(self.h, observer[i])
+                        self.update(observer[i])
                         self.signal.append(self.x[0])
                 return self.signal
