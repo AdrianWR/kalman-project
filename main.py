@@ -1,8 +1,8 @@
-# Filtro de Kalman Extendido: Exemplo em Extensometria
+# Extended Kalman Filter: Strain Gauge Example
 
-# Neste exemplo, a medida de resistencia em um extensometro é utilizada
-# para o calculo do raio de curvatura deste instrumento. O filtro de Kalman
-# deve ser extendido, devido a nao-linearidade do problema.
+# In this example, a strain gauge resistance measurement is used to
+# calculate its radius of curvature. The Kalman Filter must be of the
+# extended type, regarding the model non-linearity.
 
 import kalman
 import random
@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 ### APPROXIMATION ERROR METHOD SIMULATION ###
 #############################################
 
-n = 4000                                                        # Number of samples to test
-rho = ig.RandomVariable(mean = 320, std = 5, dist = 'gaussian') # Radius of curvature
+n = 4000                                                            # Number of samples to test
+rho = ig.RandomVariable(mean = 320, std = 5, dist = 'gaussian')     # Radius of curvature
 
 ### True Strain Gauge Model
 Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
@@ -41,19 +41,6 @@ err = ig.ApproximationError(sgApproximate,sgTrue)
 n = 1001
 strainGauge = ig.StrainGauge(Rzero, c, rho, Gf, err = err, n = n)
 strainGaugePerfect = ig.StrainGauge(Rzero, c, rho.mean, Gf, n = n)
-
-# t0 = 0             # Tempo inicial
-# tf = 100           # Tempo final
-# t = np.linspace(t0, tf, n, endpoint=True)    # Vetor de tempos
-# dt = t[2] - t[1]                               # Passo de Tempo
-
-## Simulação do Observador
-
-# A variável que o simulador capta é a resistência R
-#Res = 500                                  # Resistência Simulada
-#y_r  = np.linspace(Res, Res, n)
-#cov_ym = 45*100*c**2
-#y_m = y_r + np.random.randn(len(y_r))*np.sqrt(cov_ym)
 
 def simFunction(x):
     #y = np.sin(0.25*x)
@@ -103,7 +90,7 @@ Filter.filter(y_m)
 radius_theoretical = strainGauge.stateArray
 radius_filter = Filter.signal
 
-## Exibicao
+## Plotting
 plt.figure(1)
 plt.subplot(211)
 plt.plot(y_r,'k', label = 'R - Modelo')
