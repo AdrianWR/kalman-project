@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 #############################################
 
 n = 4000                                                        # Number of samples to test
-rho = ig.RandomVariable(mean = 320, std = 5, dist = 'gaussian') # Radius of curvature
+rho = ig.RandomVariable(mean = 160, std = 5, dist = 'gaussian') # Radius of curvature
 
 ### True Strain Gauge Model
 Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
@@ -38,22 +38,18 @@ err = ig.ApproximationError(sgApproximate,sgTrue)
 ###  SIMULATION ANALYSIS ###
 ############################
 
-n = 1001
+Rzero = 220
+c = 0.2
+Gf = 8.1
+#rho = 160
+
+n = 1000
 strainGauge = ig.StrainGauge(Rzero, c, rho, Gf, err = err, n = n)
-strainGaugePerfect = ig.StrainGauge(Rzero, c, rho.mean, Gf, n = n)
+strainGaugePerfect = ig.StrainGauge(Rzero, c, rho, Gf, err = 0, n = n)
 
-# t0 = 0             # Tempo inicial
-# tf = 100           # Tempo final
-# t = np.linspace(t0, tf, n, endpoint=True)    # Vetor de tempos
-# dt = t[2] - t[1]                               # Passo de Tempo
-
-## Simulação do Observador
-
-# A variável que o simulador capta é a resistência R
-#Res = 500                                  # Resistência Simulada
-#y_r  = np.linspace(Res, Res, n)
-#cov_ym = 45*100*c**2
-#y_m = y_r + np.random.randn(len(y_r))*np.sqrt(cov_ym)
+y_r = strainGaugePerfect.array
+y_m = strainGauge.array
+cov_ym = strainGauge.array.var()
 
 def simFunction(x):
     #y = np.sin(0.25*x)
@@ -62,10 +58,6 @@ def simFunction(x):
     y = 1
     return y
 
-y_r = strainGaugePerfect.array
-y_m = strainGauge.array
-cov_ym = strainGauge.array.var()
-
 ########################
 ### KALMAN FILTERING ###
 ########################
@@ -73,6 +65,7 @@ cov_ym = strainGauge.array.var()
 ### Strain Gauge Process Equations
 
 # Process Function
+### Random Walk Model
 def f(x):
     return x
 
@@ -91,8 +84,7 @@ x0 = np.array([10])
 P0 = np.array([1])
 Fk = np.array([0])
 R = np.array([cov_ym])
-#R = np.array([0.001])
-Q = np.array([10000])
+Q = np.array([900])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
@@ -103,18 +95,18 @@ Filter.filter(y_m)
 radius_theoretical = strainGauge.stateArray
 radius_filter = Filter.signal
 
-## Exibicao
+## Plotting
 plt.figure(1)
 plt.subplot(211)
-plt.plot(y_r,'k', label = 'R - Modelo')
-plt.plot(y_m,'r.', label = 'R- Observação')
-plt.title('Resistência do Extensômetro')
+plt.plot(y_r,'k', label = 'R - Model')
+plt.plot(y_m,'r.', label = 'R - Observation')
+plt.title('Strain Gauge Resistance')
 plt.legend()
 
 plt.subplot(212)
-plt.plot(radius_filter,'m-', label = 'Raio de Curvatura - Filtro')
-plt.plot(radius_theoretical, label = 'Raio de Curvatura - Teórico')
-plt.title('Raio de Curvatura')
+plt.plot(radius_filter,'m-', label = 'Filtered')
+plt.plot(radius_theoretical, label = 'True')
+plt.title('Radius of Curvature')
 plt.legend()
 
 plt.show()
