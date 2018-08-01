@@ -97,7 +97,7 @@ Filter.h = h
 Filter.HK = HK
 Filter.filter(y_m)
 
-radius_theoretical = strainGauge.stateArray
+radius_theoretical = strainGaugeApproximate.stateArray
 radius_filter = Filter.signal
 
 ## Plotting
