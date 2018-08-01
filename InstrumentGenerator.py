@@ -52,10 +52,10 @@ class StrainGauge(object):
 
 
     # Realize observable data from input parameters.
-    def realizeData(self):
+    def realizeData(self, rho):
         try:
-            rho = self.rho()
-            R = self.Gf()*self.Rzero()*self.c()/self.rho() + self.Rzero() + self.err()
+            R = (self.Gf()*self.Rzero()*self.c()/rho) + self.Rzero()
+            R *= 1 + self.err()
             return np.array([rho, R])
         except TypeError:
             print('Something went wrong, check variable types.')
@@ -66,14 +66,24 @@ class StrainGauge(object):
 
     # Generate n-th array with data realized from parameters
     def realizeArray(self, n):
-        self.array = np.zeros(n)
-        self.stateArray = np.zeros(n)        
+        
+        # if type(rho) == numpy.ndarray:
+        #     if rho.size != n:
+        #         raise ValueError('Size of rho array must be equal to samples number.')
+        #         break
+        #     else:
+        #         pass
+
+        self.realizationArray = np.zeros(n)
+        self.stateArray = np.zeros(n)
         for i in range(0, n):
-            data = self.realizeData()
-            self.stateArray[i] = data[0]
-            self.array[i] = data[1]
+            if (type(rho) == RandomVariable):
+                data = self.realizeData(rho())
+            else:
+                data = self.realizeData(rho[i])
+            self.stateArray[i]       = data[0]
+            self.realizationArray[i] = data[1]
             #self.array[i] = self.simFunction(i)*self.realizeData()[1]
-            
 
 
 # This class defines a random variable data type to be used during the simulations. With its help, it's possible to
@@ -131,9 +141,26 @@ class ApproximationError(RandomVariable):
     
     def __init__(self, strainGauge1, strainGauge2):
         
-        self.array = strainGauge1.array - strainGauge2.array
-        RandomVariable.__init__(self, self.array.mean(), self.array.std(),'gaussian')
-        pass       
+        if (strainGauge2.rho != strainGauge1.rho):
+            print('Random state variable is unequal on models. Assuming distribution of first argument.')
+            strainGauge2.rho = strainGauge1.rho
+        elif strainGauge1.n != strainGauge2.n:
+            print('Number of samples is unequal on models. Assuming samples number of first argument.')
+            strainGauge2.n = strainGauge1.n
+        else:
+            pass
+        
+        n = strainGauge1.n
+        rhoSamples = np.zeros(n)
+        for i in range(n):
+            rhoSamples[i] = strainGauge1.rho()
+        
+        strainGauge1.rho = rhoSamples
+        strainGauge2.rho = rhoSamples
+
+        self.realizationArray = strainGauge1.realizationArray - strainGauge2.realizationArray
+        RandomVariable.__init__(self, self.realizationArray.mean(), self.realizationArray.std(),'gaussian')
+        pass
 
 # ##################
 # Class Testing Area
@@ -145,7 +172,7 @@ if __name__ == '__main__':
     rho   = RandomVariable(10, 0.5, 'gaussian')
     Gf    = RandomVariable(8,1,'gaussian')
     dev   = RandomVariable(dist = 'uniform')
-    dev.uniformLowHigh(-5,5) 
+    dev.uniformLowHigh(-5,5)
 
     n = 50
     #c = 'paçoca'

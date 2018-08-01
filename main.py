@@ -22,14 +22,14 @@ Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
 c         = ig.RandomVariable(0.2, 0, 'nonRandom')    # Strain gauge half length (mm)
 Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
 err       = ig.RandomVariable(0, 0,'uniform')
-err.uniformLowHigh(-5,5)
-sgTrue = ig.StrainGauge(Rzero, c, rho, Gf, err = err, n = n)
+err.uniformLowHigh(-0.05, 0.05)
+sgTrue = ig.StrainGauge(Rzero = Rzero, c = c, rho = rho, Gf = Gf, err = err, n = n)
 
 ### Approximate Strain Gauge Model
 Rzero         = 200    # Initial resistance
 c             = 0.2    # Strain gauge half length (mm)
 Gf            = 8      # Gauge factor
-sgApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0, n = n)
+sgApproximate = ig.StrainGauge(Rzero = Rzero, c = c, rho = rho, Gf = Gf, err = 0, n = n)
 
 ### Approximation Error Random Variable
 err = ig.ApproximationError(sgApproximate,sgTrue)
@@ -38,18 +38,23 @@ err = ig.ApproximationError(sgApproximate,sgTrue)
 ###  SIMULATION ANALYSIS ###
 ############################
 
+n = 200
+
 Rzero = 220
 c = 0.2
 Gf = 8.1
-#rho = 160
+rho = 160
+strainGaugeReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err, n = n)
 
-n = 1000
-strainGauge = ig.StrainGauge(Rzero, c, rho, Gf, err = err, n = n)
-strainGaugePerfect = ig.StrainGauge(Rzero, c, rho, Gf, err = 0, n = n)
+Rzero = 200
+c = 0.2
+Gf = 8
+rho = 160
+strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0, n = n)
 
-y_r = strainGaugePerfect.array
-y_m = strainGauge.array
-cov_ym = strainGauge.array.var()
+y_r = strainGaugeApproximate.array
+y_m = strainGaugeReal.array
+cov_ym = strainGaugeReal.array.var()
 
 def simFunction(x):
     #y = np.sin(0.25*x)
