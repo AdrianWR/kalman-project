@@ -10,19 +10,18 @@ import random
 # PROPERTIES SUMMARY
 # Rzero: Initial value of strain gauge resistance.  RandomVariable type
 # c: Half height of strain gauge.                   RandomVariable type
-# rho: radius of curvature taken from strain gauge. RandomVariable type
+# rho: radius of curvature taken from strain gauge. numpy.ndarray type
 # Gf: Instrument gauge factor.                      RandomVariable type
 # n: number of measurements to take                 int type   
 
 class StrainGauge(object):
 
-    def __init__(self, Rzero, c, rho, Gf, err = 0, n = 0):
+    def __init__(self, Rzero, c, rho, Gf, err = 0):
 
         self.Rzero      = Rzero
         self.c          = c
-        self.rho        = rho
         self.Gf         = Gf
-        self.err  = err
+        self.err        = err
 
         for i in vars(self):
             if (type(vars(self)[i]) == int or type(vars(self)[i]) == float):
@@ -32,7 +31,8 @@ class StrainGauge(object):
         #   else:
         #       raise SystemExit
         
-        self.n     = n
+        self.rho   = rho
+        self.realizationArray = self.realizeArray()
 
     # As number of samples 'n' is assigned, create samples array as object property 
     def __setattr__(self, name, value):
@@ -56,34 +56,18 @@ class StrainGauge(object):
         try:
             R = (self.Gf()*self.Rzero()*self.c()/rho) + self.Rzero()
             R *= 1 + self.err()
-            return np.array([rho, R])
+            return R
         except TypeError:
             print('Something went wrong, check variable types.')
 
-    # Simulation of the multiplier function. May be changed from outside.
-    def simFunction(self, t):
-        return 1
 
     # Generate n-th array with data realized from parameters
-    def realizeArray(self, n):
-        
-        # if type(rho) == numpy.ndarray:
-        #     if rho.size != n:
-        #         raise ValueError('Size of rho array must be equal to samples number.')
-        #         break
-        #     else:
-        #         pass
-
-        self.realizationArray = np.zeros(n)
-        self.stateArray = np.zeros(n)
-        for i in range(0, n):
-            if (type(rho) == RandomVariable):
-                data = self.realizeData(rho())
-            else:
-                data = self.realizeData(rho[i])
-            self.stateArray[i]       = data[0]
-            self.realizationArray[i] = data[1]
-            #self.array[i] = self.simFunction(i)*self.realizeData()[1]
+    def realizeArray(self):
+        n = self.rho.size
+        realizationArray = np.zeros(n)
+        for i in range(n):
+            realizationArray[i] = self.realizeData(rho[i])
+        return realizationArray
 
 
 # This class defines a random variable data type to be used during the simulations. With its help, it's possible to
@@ -102,17 +86,19 @@ class StrainGauge(object):
 
 class RandomVariable(object):
 
-    def __init__(self, mean = 0, std = 0, dist = 'nonRandom'):
+    def __init__(self, mean = 0, std = 0, dist = 'nonRandom', n = 0):
     
         _distributions = ['nonRandom','gaussian','uniform']
 
         if dist not in _distributions:
             print('Variável ' + __name__ + ' não pode assumir distribuição do tipo ' + dist + '.')
         
+        #self.n = n
         self.mean = mean
         self.std = std
         self.var = std**2
         self.dist = dist
+        self.distributionArray = np.array([mean])
 
     def __call__(self):
 
@@ -123,6 +109,13 @@ class RandomVariable(object):
         else:
             return self.mean
         pass
+    
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        if name == 'n' and value > 0:
+            self.distributionArray = np.zeros(value)
+            for i in range(value):
+                self.distributionArray[i] = self()
 
     def uniformLowHigh(self, low, high):
         
@@ -132,6 +125,7 @@ class RandomVariable(object):
             self.var = (self.std)**2
         else:
             raise TypeError("Distribution must be 'uniform' to call this method.")
+ 
 
 # Inherited class from RandomVariable.
 # Calculate the Aproximation Error based on two instances of StrainGauge class.
@@ -175,9 +169,9 @@ if __name__ == '__main__':
     dev.uniformLowHigh(-5,5)
 
     n = 50
-    #c = 'paçoca'
-    R1 = StrainGauge(Rzero, c, rho, Gf, n = 50)
-    R2 = StrainGauge(3,2,10,8, dev, n = 50)
-    eps = ApproximationError(R1, R2)
+
+    #R1 = StrainGauge(Rzero, c, rho, Gf, n = 50)
+    #R2 = StrainGauge(3,2,10,8, dev, n = 50)
+   # eps = ApproximationError(R1, R2)
 
     print('ok')
