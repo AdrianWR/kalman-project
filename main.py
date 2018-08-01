@@ -14,13 +14,8 @@ import matplotlib.pyplot as plt
 ### APPROXIMATION ERROR METHOD SIMULATION ###
 #############################################
 
-<<<<<<< HEAD
 n = 4000                                                        # Number of samples to test
 rho = ig.RandomVariable(mean = 160, std = 5, dist = 'gaussian') # Radius of curvature
-=======
-n = 4000                                                            # Number of samples to test
-rho = ig.RandomVariable(mean = 320, std = 5, dist = 'gaussian')     # Radius of curvature
->>>>>>> 2dd1df35c3ffa3ee6626bc8ba122cd275b485c92
 
 ### True Strain Gauge Model
 Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
@@ -45,7 +40,6 @@ err = ig.ApproximationError(sgApproximate,sgTrue)
 
 n = 200
 
-<<<<<<< HEAD
 Rzero = 220
 c = 0.2
 Gf = 8.1
@@ -62,8 +56,6 @@ y_r = strainGaugeApproximate.array
 y_m = strainGaugeReal.array
 cov_ym = strainGaugeReal.array.var()
 
-=======
->>>>>>> 2dd1df35c3ffa3ee6626bc8ba122cd275b485c92
 def simFunction(x):
     #y = np.sin(0.25*x)
     #y = 1.0001*x
