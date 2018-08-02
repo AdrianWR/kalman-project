@@ -93,7 +93,7 @@ x0 = np.array([100])
 P0 = np.array([1])
 Fk = np.array([1])
 R = np.array([cov_ym])
-Q = np.array([0.1])
+Q = np.array([0.5])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
