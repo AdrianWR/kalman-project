@@ -14,54 +14,58 @@ import matplotlib.pyplot as plt
 ### APPROXIMATION ERROR METHOD SIMULATION ###
 #############################################
 
-n = 4000                                                        # Number of samples to test
-rho = ig.RandomVariable(mean = 160, std = 5, dist = 'gaussian') # Radius of curvature
-
-### True Strain Gauge Model
-Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
-c         = ig.RandomVariable(0.2, 0, 'nonRandom')    # Strain gauge half length (mm)
-Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
-err       = ig.RandomVariable(0, 0,'uniform')
-err.uniformLowHigh(-0.05, 0.05)
-sgTrue = ig.StrainGauge(Rzero = Rzero, c = c, rho = rho, Gf = Gf, err = err, n = n)
+n = 4000                                                               # Number of samples to test
+rho = ig.RandomVariable(mean = 160, std = 5, dist = 'gaussian', n = n) # Radius of curvature
 
 ### Approximate Strain Gauge Model
 Rzero         = 200    # Initial resistance
 c             = 0.2    # Strain gauge half length (mm)
 Gf            = 8      # Gauge factor
-sgApproximate = ig.StrainGauge(Rzero = Rzero, c = c, rho = rho, Gf = Gf, err = 0, n = n)
+sgApproximate = ig.StrainGauge(Rzero, c, rho, Gf)
+
+### Real Strain Gauge Model
+Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
+c         = ig.RandomVariable(0.2, 0, 'nonRandom')    # Strain gauge half length (mm)
+Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
+err       = ig.RandomVariable(0, 0,'uniform')
+err.uniformLowHigh(-0.05, 0.05)
+sgReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
 
 ### Approximation Error Random Variable
-err = ig.ApproximationError(sgApproximate,sgTrue)
+err = ig.ApproximationError(sgApproximate,sgReal)
 
 ############################
 ###  SIMULATION ANALYSIS ###
 ############################
 
-n = 200
+def simFunction(x):
+    y = 200*np.sin(0.2*x)
+    #y = 1.0001*x
+    #y = random.gauss(0,2)*x
+    #y = 1
+    return y
 
-Rzero = 220
-c = 0.2
-Gf = 8.1
-rho = 160
-strainGaugeReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err, n = n)
+n = 100
 
 Rzero = 200
 c = 0.2
 Gf = 8
-rho = 160
-strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0, n = n)
+rhoApproximate = ig.RandomVariable(200, 0, 'nonRandom', n)
+strainGaugeApproximate = ig.StrainGauge(Rzero, c, rhoApproximate, Gf, err = 0)
 
-y_r = strainGaugeApproximate.array
-y_m = strainGaugeReal.array
-cov_ym = strainGaugeReal.array.var()
+Rzero = 217
+c = 0.18
+Gf = 8.1
+rhoReal = ig.RandomVariable(200, 0, 'nonRandom', n)
+err     = ig.RandomVariable(dist = 'uniform')
+err.uniformLowHigh(-0.0005, 0.0005)
+strainGaugeReal = ig.StrainGauge(Rzero, c, rhoReal, Gf, err = err)
 
-def simFunction(x):
-    #y = np.sin(0.25*x)
-    #y = 1.0001*x
-    #y = random.gauss(0,2)*x
-    y = 1
-    return y
+y_a = strainGaugeApproximate.realizationArray
+y_m = strainGaugeReal.realizationArray
+cov_ym = strainGaugeReal.realizationArray.var()
+
+
 
 ########################
 ### KALMAN FILTERING ###
@@ -85,11 +89,11 @@ def HK(x):
     return dR
 
 # Filter Parameters
-x0 = np.array([10])
+x0 = np.array([100])
 P0 = np.array([1])
-Fk = np.array([0])
+Fk = np.array([1])
 R = np.array([cov_ym])
-Q = np.array([900])
+Q = np.array([0.1])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
@@ -97,21 +101,24 @@ Filter.h = h
 Filter.HK = HK
 Filter.filter(y_m)
 
-radius_theoretical = strainGaugeApproximate.stateArray
-radius_filter = Filter.signal
+radius_measurement = strainGaugeReal.stateFromRealization()
+radius_approximate = strainGaugeReal.rho.distributionArray
+radius_filter = np.array(Filter.signal)
 
 ## Plotting
 plt.figure(1)
 plt.subplot(211)
-plt.plot(y_r,'k', label = 'R - Model')
+plt.plot(y_a,'k', label = 'R - Approximation')
 plt.plot(y_m,'r.', label = 'R - Observation')
 plt.title('Strain Gauge Resistance')
 plt.legend()
 
 plt.subplot(212)
+plt.plot(radius_measurement, 'g--', label = 'Measured')
 plt.plot(radius_filter,'m-', label = 'Filtered')
-plt.plot(radius_theoretical, label = 'True')
+plt.plot(radius_approximate, label = 'Real')
 plt.title('Radius of Curvature')
 plt.legend()
 
 plt.show()
+print('ok')
