@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Extended Kalman Filter: Strain Gauge Example
 
 # In this example, a strain gauge resistance measurement is used to
@@ -28,7 +29,7 @@ Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
 c         = ig.RandomVariable(0.2, 0, 'nonRandom')    # Strain gauge half length (mm)
 Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
 err       = ig.RandomVariable(0, 0,'uniform')
-err.uniformLowHigh(-0.05, 0.05)
+err.uniformLowHigh(-5, 5)
 sgReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
 
 ### Approximation Error Random Variable
@@ -39,27 +40,29 @@ err = ig.ApproximationError(sgApproximate,sgReal)
 ############################
 
 def simFunction(x):
-    y = 200*np.sin(0.2*x)
+    #y = 200*np.sin(0.2*x)
     #y = 1.0001*x
     #y = random.gauss(0,2)*x
-    #y = 1
+    y = np.full(x.shape, 200)
     return y
 
-n = 100
+n = 200
+rho = ig.RandomVariable(0, 0, 'nonRandom', n)
+rho.distributionArray = simFunction(np.array(range(1,n+1)))
 
+# Strain Gauge Approximate Model for Analysis
 Rzero = 200
 c = 0.2
 Gf = 8
-rhoApproximate = ig.RandomVariable(200, 0, 'nonRandom', n)
-strainGaugeApproximate = ig.StrainGauge(Rzero, c, rhoApproximate, Gf, err = 0)
+strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
+# Strain Gauge Real Model for Analysis
 Rzero = 217
 c = 0.18
 Gf = 8.1
-rhoReal = ig.RandomVariable(200, 0, 'nonRandom', n)
 err     = ig.RandomVariable(dist = 'uniform')
-err.uniformLowHigh(-0.0005, 0.0005)
-strainGaugeReal = ig.StrainGauge(Rzero, c, rhoReal, Gf, err = err)
+err.uniformLowHigh(-1, 1)
+strainGaugeReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
 
 y_a = strainGaugeApproximate.realizationArray
 y_m = strainGaugeReal.realizationArray
@@ -93,23 +96,32 @@ x0 = np.array([100])
 P0 = np.array([1])
 Fk = np.array([1])
 R = np.array([cov_ym])
-Q = np.array([0.5])
+Q = np.array([10])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
 Filter.h = h
 Filter.HK = HK
-Filter.filter(y_m)
+Filter.filterSampleArray(y_m)
 
 radius_measurement = strainGaugeReal.stateFromRealization()
 radius_approximate = strainGaugeReal.rho.distributionArray
 radius_filter = np.array(Filter.signal)
 
-## Plotting
-plt.figure(1)
+################
+### PLOTTING ###
+################
+
+plt.figure(num = 1, figsize=(7,8))
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+plt.tight_layout()
+
 plt.subplot(211)
 plt.plot(y_a,'k', label = 'R - Approximation')
 plt.plot(y_m,'r.', label = 'R - Observation')
+plt.ylim(y_a.min()*0.95, y_m.max()*1.05)
+plt.ylabel('Resistance (' + r'$\Omega$' + ')')
 plt.title('Strain Gauge Resistance')
 plt.legend()
 
@@ -117,8 +129,10 @@ plt.subplot(212)
 plt.plot(radius_measurement, 'g--', label = 'Measured')
 plt.plot(radius_filter,'m-', label = 'Filtered')
 plt.plot(radius_approximate, label = 'Real')
+plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
 plt.title('Radius of Curvature')
 plt.legend()
 
-plt.show()
+plt.savefig("./simulation.png",dpi=72)
+#plt.show()
 print('ok')

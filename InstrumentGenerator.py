@@ -44,7 +44,7 @@ class StrainGauge(object):
     def realizeData(self, rho):
         try:
             R = (self.Gf()*self.Rzero()*self.c()/rho) + self.Rzero()
-            R *= 1 + self.err()
+            R += self.err()
             return R
         except TypeError:
             print('Something went wrong on data realization, check variable types.')
