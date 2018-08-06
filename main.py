@@ -134,5 +134,5 @@ plt.title('Radius of Curvature')
 plt.legend()
 
 plt.savefig("./simulation.png",dpi=72)
-#plt.show()
+plt.show()
 print('ok')
