@@ -57,8 +57,8 @@ class ExtendedKalmanFilter(object):
                 self.P = (I-self.K*HK(x))*P
                 # Joseph Form
                 #self.P = (I-self.K*HK(x))*P*(I-self.K*HK(x)).T + P*self.Q*P.T
-                self.P = (self.P+self.P.T)/2
-                #print(self.P)
+                #self.P = (self.P+self.P.T)/2
+                print(self.x)
 
         def filterSample(self, ym):
 

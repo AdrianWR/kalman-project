@@ -40,15 +40,24 @@ err = ig.ApproximationError(sgApproximate,sgReal)
 ############################
 
 def simFunction(x):
-    #y = 200*np.sin(0.2*x)
+    #y = 200*np.sin(0.02*x) + 100
     #y = 1.0001*x
     #y = random.gauss(0,2)*x
-    y = np.full(x.shape, 200)
+    y = np.full(x.shape, 200)      # Constant Function
+    #y = 0.25*x
     return y
 
 n = 200
 rho = ig.RandomVariable(0, 0, 'nonRandom', n)
 rho.distributionArray = simFunction(np.array(range(1,n+1)))
+
+# Strain Gauge Real Model for Analysis
+Rzero = 217
+c = 0.18
+Gf = 8.1
+noise = ig.RandomVariable(dist = 'uniform')
+noise.uniformLowHigh(-0.5, 0.5)
+strainGaugeReal = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
 
 # Strain Gauge Approximate Model for Analysis
 Rzero = 200
@@ -56,19 +65,9 @@ c = 0.2
 Gf = 8
 strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
-# Strain Gauge Real Model for Analysis
-Rzero = 217
-c = 0.18
-Gf = 8.1
-err     = ig.RandomVariable(dist = 'uniform')
-err.uniformLowHigh(-1, 1)
-strainGaugeReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
-
 y_a = strainGaugeApproximate.realizationArray
 y_m = strainGaugeReal.realizationArray
 cov_ym = strainGaugeReal.realizationArray.var()
-
-
 
 ########################
 ### KALMAN FILTERING ###
@@ -96,7 +95,7 @@ x0 = np.array([100])
 P0 = np.array([1])
 Fk = np.array([1])
 R = np.array([cov_ym])
-Q = np.array([10])
+Q = np.array([2])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
@@ -104,7 +103,7 @@ Filter.h = h
 Filter.HK = HK
 Filter.filterSampleArray(y_m)
 
-radius_measurement = strainGaugeReal.stateFromRealization()
+radius_measurement = strainGaugeReal.measuredStateArray
 radius_approximate = strainGaugeReal.rho.distributionArray
 radius_filter = np.array(Filter.signal)
 
@@ -112,7 +111,7 @@ radius_filter = np.array(Filter.signal)
 ### PLOTTING ###
 ################
 
-plt.figure(num = 1, figsize=(7,8))
+plt.figure(num = 1, figsize=(14,8))
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 plt.tight_layout()
@@ -133,6 +132,6 @@ plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
 plt.title('Radius of Curvature')
 plt.legend()
 
-plt.savefig("./simulation.png",dpi=72)
+plt.savefig("./simulation.png",dpi=96)
 plt.show()
 print('ok')

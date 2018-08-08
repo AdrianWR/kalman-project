@@ -30,22 +30,27 @@ class StrainGauge(object):
                 pass
         
         self.rho   = rho
-        #self.realizationArray = self.realizeArray()
         pass
 
     # As number of samples 'n' is assigned, create samples array as object property 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         if name == 'rho':
-            self.realizationArray = self.realizeArray(value)
+            self.realizeArray(value)
 
 
     # Realize observable data from input parameters.
     def realizeData(self, rho):
-        try:
-            R = (self.Gf()*self.Rzero()*self.c()/rho) + self.Rzero()
-            R += self.err()
-            return R
+        
+        Gf    = self.Gf()
+        Rzero = self.Rzero()
+        c     = self.c()
+        err   = self.err()
+
+        try:            
+            R = (Gf*Rzero*c/rho) + Rzero + err
+            rho_measure = (Gf*Rzero*c)/(R-Rzero)
+            return [rho_measure, R]
         except TypeError:
             print('Something went wrong on data realization, check variable types.')
             raise SystemExit
@@ -53,18 +58,21 @@ class StrainGauge(object):
     # Generate n-th array with data realized from parameters
     def realizeArray(self, rho):
         n = rho.distributionArray.size
-        realizationArray = np.zeros(n)
+        self.realizationArray = np.zeros(n)
+        self.measuredStateArray = np.zeros(n)
         for i in range(n):
-            realizationArray[i] = self.realizeData(rho.distributionArray[i])
-        return realizationArray
+            data = self.realizeData(rho.distributionArray[i])
+            self.measuredStateArray[i] = data[0]
+            self.realizationArray[i]   = data[1]
+        pass
 
-    def stateFromRealization(self):
-        n = self.realizationArray.size
-        stateArray = np.zeros(n)
-        for i in range(n):
-            stateArray[i] = self.Gf()*self.Rzero()*self.c()
-            stateArray[i] = stateArray[i]/(self.realizationArray[i] - self.Rzero())
-        return stateArray
+    # def stateFromRealization(self):
+    #     n = self.realizationArray.size
+    #     stateArray = np.zeros(n)
+    #     for i in range(n):
+    #         stateArray[i] = self.Gf()*self.Rzero()*self.c()
+    #         stateArray[i] = stateArray[i]/(self.realizationArray[i] - self.Rzero())
+    #     return stateArray
 
 
 
@@ -158,7 +166,7 @@ class ApproximationError(RandomVariable):
 if __name__ == '__main__':
     
     rho   = RandomVariable(10, 0.5, 'gaussian', 5)
-    rho2   = RandomVariable(10, 0.5, 'gaussian', 5)
+    rho2  = RandomVariable(10, 0.5, 'gaussian', 5)
     Rzero = RandomVariable(2,1,'gaussian')
     c     = RandomVariable(2)
     Gf    = RandomVariable(8,1,'gaussian')
