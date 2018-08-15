@@ -29,7 +29,7 @@ Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
 c         = ig.RandomVariable(0.2, 0, 'nonRandom')    # Strain gauge half length (mm)
 Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
 err       = ig.RandomVariable(0, 0,'uniform')
-err.uniformLowHigh(-5, 5)
+err.uniformLowHigh(-10, 10)
 sgReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
 
 ### Approximation Error Random Variable
@@ -67,7 +67,8 @@ strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
 y_a = strainGaugeApproximate.realizationArray
 y_m = strainGaugeReal.realizationArray
-cov_ym = strainGaugeReal.realizationArray.var()
+#cov_ym = strainGaugeReal.realizationArray.var()
+cov_ym = err.var
 
 ########################
 ### KALMAN FILTERING ###
@@ -86,26 +87,25 @@ def h(x):
     return R
 
 # Observer Derivative Function
-def HK(x):
+def H(x):
     dR = -(Gf*Rzero*c)/(x**2)
     return dR
 
 # Filter Parameters
-x0 = np.array([100])
+x0 = np.array([1])
 P0 = np.array([1])
 Fk = np.array([1])
 R = np.array([cov_ym])
-Q = np.array([2])
+Q = np.array([200])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
 Filter.h = h
-Filter.HK = HK
-Filter.filterSampleArray(y_m)
+Filter.H = H
 
 radius_measurement = strainGaugeReal.measuredStateArray
 radius_approximate = strainGaugeReal.rho.distributionArray
-radius_filter = np.array(Filter.signal)
+radius_filter      = Filter.filterSampleArray(y_m)
 
 ################
 ### PLOTTING ###

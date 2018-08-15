@@ -2,6 +2,7 @@
 # o desenvolvimento de filtros de Kalman
 
 import numpy as np
+from numpy import dot, eye, array
 
 ### DEFINIÇÕES RELEVANTES
 # As variáveis inseridas na inicialização da classe
@@ -18,9 +19,7 @@ class ExtendedKalmanFilter(object):
                 self.Q = Q
                 self.R = R
 
-                self.K = np.array([0])
-
-        # As funções h e HK podem ser alteradas no programa de filtragem.
+        # As funções h e H podem ser alteradas no programa de filtragem.
         # Por default, observará o estado da variável x e sua derivada.
 
         def f(self, x):
@@ -29,7 +28,7 @@ class ExtendedKalmanFilter(object):
         def h(self, x):
                return x
 
-        def HK(self, x):
+        def H(self, x):
                return x
 
         def propagate(self):
@@ -43,34 +42,35 @@ class ExtendedKalmanFilter(object):
                 self.P = Fk*P*Fk.T + Q
 
 
-        def update(self, ym):
+        def update(self, z):
 
                 x = self.x
                 P = self.P
-                h = self.h
-                HK = self.HK
                 R = self.R
+                H = self.H(x)
+                y = z - self.h(x)
 
                 I = np.array([1.0])
-                self.K = (P*HK(x).T)/((HK(x)*P*HK(x).T+R))
-                self.x = x + self.K*(ym-h(x))
-                self.P = (I-self.K*HK(x))*P
+                K = P*H.T
+                K = K/(H*P*H.T+R)
+                self.x = x + K*y
+                self.P = (I-K*H)*P
                 # Joseph Form
                 #self.P = (I-self.K*HK(x))*P*(I-self.K*HK(x)).T + P*self.Q*P.T
                 #self.P = (self.P+self.P.T)/2
-                print(self.x)
+                print(self.P)
 
-        def filterSample(self, ym):
+        def filterSample(self, z):
 
                 self.propagate()
-                self.update(ym)
+                self.update(z)
                 return self.x
 
         def filterSampleArray(self, observer):
 
                 n = len(observer)
-                self.signal = []
+                signal = []
                 for i in range(0,n):
                         x = self.filterSample(observer[i])
-                        self.signal.append(x[0])
-                return np.array(self.signal)
+                        signal.append(x[0])
+                return np.array(signal)

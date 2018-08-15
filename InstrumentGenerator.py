@@ -157,7 +157,7 @@ class ApproximationError(RandomVariable):
             pass
         
         self.realizationArray = strainGauge1.realizationArray - strainGauge2.realizationArray
-        RandomVariable.__init__(self, self.realizationArray.mean(), self.realizationArray.std(),'gaussian')
+        RandomVariable.__init__(self, self.realizationArray.mean(), self.realizationArray.std(),'uniform')
         pass
 
 # ##################
