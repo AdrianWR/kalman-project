@@ -101,9 +101,9 @@ class RandomVariable(object):
         
         self.mean = mean
         self.std = std
-        self.var = std**2
+        #self.var = std**2
         self.dist = dist
-        self.distributionArray = np.array([mean])
+        #self.distributionArray = np.array([mean])
         self.n = n
     
     def __call__(self):
@@ -121,6 +121,8 @@ class RandomVariable(object):
             self.distributionArray = np.zeros(value)
             for i in range(value):
                 self.distributionArray[i] = self()
+        elif name == 'std':
+            self.var = value**2
 
     def uniformLowHigh(self, low, high):
         
@@ -148,16 +150,18 @@ class RandomVariable(object):
 
 class ApproximationError(RandomVariable):
     
-    def __init__(self, strainGauge1, strainGauge2):
+    def __init__(self, strainGauge1 = 0, strainGauge2 = 0):
         
-        if (strainGauge2.rho != strainGauge1.rho):
+        if (strainGauge1 == 0 and strainGauge2 == 0):
+            RandomVariable.__init__(self)
+        elif (strainGauge2.rho != strainGauge1.rho):
             print('Random state variable is unequal on models. Assuming distribution of first argument.')
             strainGauge2.rho = strainGauge1.rho
         else:
+            realizationArray = strainGauge1.realizationArray - strainGauge2.realizationArray
+            RandomVariable.__init__(self, realizationArray.mean(), realizationArray.std(),'uniform')
             pass
         
-        self.realizationArray = strainGauge1.realizationArray - strainGauge2.realizationArray
-        RandomVariable.__init__(self, self.realizationArray.mean(), self.realizationArray.std(),'uniform')
         pass
 
 # ##################
@@ -177,5 +181,8 @@ if __name__ == '__main__':
     R1 = StrainGauge(Rzero, c, rho, Gf, err = 0)
     R2 = StrainGauge(3,2,rho2,8, err = dev)
     eps = ApproximationError(R1, R2)
+
+    import json
+
 
     print('ok')
