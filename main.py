@@ -104,6 +104,9 @@ def h(x):
     R = ((Gf*Rzero*c)/x) + Rzero + err.mean
     return R
 
+def h_noErr(x):
+    return ((Gf*Rzero*c)/x) + Rzero
+
 # Observer Derivative Function
 def H(x):
     dR = -(Gf*Rzero*c)/(x**2)
@@ -121,10 +124,10 @@ Filter.f = f
 Filter.h = h
 Filter.H = H
 
-radius_true = strainGaugeTrue.measuredStateArray
-radius_filter      = Filter.filterSampleArray(yMeasured)
+radius_true     = strainGaugeTrue.measuredStateArray
+radius_filter   = Filter.filterSampleArray(yMeasured)
 
-yEstimated = h(radius_filter)
+yEstimated = h_noErr(radius_filter)
 
 ################
 ### PLOTTING ###
@@ -155,4 +158,4 @@ plt.legend()
 
 plt.savefig("./simulation.png",dpi=96)
 plt.show()
-print('ok')
+#print('ok')
