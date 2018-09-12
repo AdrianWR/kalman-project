@@ -16,20 +16,22 @@ from os.path import exists
 ### APPROXIMATION ERROR METHOD SIMULATION ###
 #############################################
 
+
+
 def callApproximationError():
-    
+
     n = 4000                                                               # Number of samples to test
     rho = ig.RandomVariable(mean = 190, std = 20, dist = 'gaussian', n = n) # Radius of curvature
 
     ### Approximate Strain Gauge Model
-    Rzero         = 200    # Initial resistance
-    c             = 0.2    # Strain gauge half length (mm)
+    Rzero         = 9000    # Initial resistance
+    c             = 1.7    # Strain gauge half length (mm)
     Gf            = 8      # Gauge factor
     sgApproximate = ig.StrainGauge(Rzero, c, rho, Gf)
 
     ### Real Strain Gauge Model
-    Rzero     = ig.RandomVariable(200, 10, 'gaussian')    # Initial resistance
-    c         = ig.RandomVariable(0.2, 0, 'nonRandom')    # Strain gauge half length (mm)
+    Rzero     = ig.RandomVariable(9000, 100, 'gaussian')    # Initial resistance
+    c         = ig.RandomVariable(1.7, 0, 'nonRandom')    # Strain gauge half length (mm)
     Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
     err       = ig.RandomVariable(0, 0,'uniform')
     err.uniformLowHigh(-0.5, 0.5)
@@ -56,31 +58,29 @@ else:
 ############################
 
 def simFunction(x):
-    #y = 200*np.sin(0.02*x) + 100
-    #y = 1.0001*x
-    #y = random.gauss(0,2)*x
-    y = np.full(x.shape, 200)      # Constant Function
-    #y = 0.25*x
+    #y = 200*np.sin(0.01*x) + 100 # Sine Function
+    #y = np.full(x.shape, 10)      # Constant Function
+    y = -0.25*x + 100              # Linear Function
     return y
 
-n = 100
+n = 300
 rho = ig.RandomVariable(0, 0, 'nonRandom', n)
 rho.distributionArray = simFunction(np.array(range(1,n+1)))
 
 # Strain Gauge True Model for Analysis
-Rzero = 202
-c = 0.18
+Rzero = 9216
+c = 1.532
 Gf = 8.1
 strainGaugeTrue = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
 noise = ig.RandomVariable(dist = 'uniform')
-noise.uniformLowHigh(-0.5, 0.5)
+noise.uniformLowHigh(-500, 500)
 strainGaugeMeasured = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
 
 
 # Strain Gauge Approximate Model for Analysis
-Rzero = 200
-c = 0.2
+Rzero = 9000
+c = 1.7
 Gf = 8
 strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
@@ -104,7 +104,7 @@ def h(x):
     R = ((Gf*Rzero*c)/x) + Rzero + err.mean
     return R
 
-def h_noErr(x):
+def h_noError(x):
     return ((Gf*Rzero*c)/x) + Rzero
 
 # Observer Derivative Function
@@ -113,11 +113,11 @@ def H(x):
     return dR
 
 # Filter Parameters
-x0 = np.array([150])
-P0 = np.array([50**2])
+x0 = np.array([15])
+P0 = np.array([10**2])
 Fk = np.array([1]) #transition matrix
 R = np.array([cov_yMeasured])
-Q = np.array([10**2])
+Q = np.array([1**2])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
@@ -127,7 +127,7 @@ Filter.H = H
 radius_true     = strainGaugeTrue.measuredStateArray
 radius_filter   = Filter.filterSampleArray(yMeasured)
 
-yEstimated = h_noErr(radius_filter)
+yEstimated = h_noError(radius_filter)
 
 ################
 ### PLOTTING ###
@@ -136,7 +136,7 @@ yEstimated = h_noErr(radius_filter)
 plt.figure(num = 1, figsize=(14,8))
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
-plt.tight_layout()
+#plt.tight_layout()
 
 plt.subplot(211)
 plt.plot(yTrue,'k', label = 'R - True')
@@ -156,6 +156,6 @@ plt.title('Radius of Curvature')
 plt.legend()
 #plt.yscale('log')
 
-plt.savefig("./simulation.png",dpi=96)
+plt.savefig("./simulation_linear.png", metadata = {'x0': str(x0), 'P0': str(P0), 'R': str(R), 'Q': str(Q)}, dpi=96)
 plt.show()
 #print('ok')
