@@ -161,7 +161,6 @@ class ApproximationError(RandomVariable):
             realizationArray = strainGauge1.realizationArray - strainGauge2.realizationArray
             RandomVariable.__init__(self, realizationArray.mean(), realizationArray.std(),'uniform')
             pass
-        
         pass
 
 # ##################
