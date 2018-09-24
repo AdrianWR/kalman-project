@@ -64,7 +64,7 @@ class ExtendedKalmanFilter(object):
 
                 self.propagate()
                 self.update(z)
-                return self.x
+                return [self.x, self.P]
 
         def filterSampleArray(self, observer):
 
@@ -72,5 +72,16 @@ class ExtendedKalmanFilter(object):
                 signal = []
                 for i in range(0,n):
                         x = self.filterSample(observer[i])
-                        signal.append(x[0])
+                        signal.append(x)
                 return np.array(signal)
+
+class Result(ExtendedKalmanFilter):
+
+        def __init__(self, kalmanFilter, observer):
+                result = kalmanFilter.filterSampleArray(observer)
+                self.x = result[:,0]
+                self.P = result[:,1]
+                pass
+
+        def __call__(self):
+                return self.x
