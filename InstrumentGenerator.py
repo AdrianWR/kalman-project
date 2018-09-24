@@ -1,5 +1,7 @@
 import numpy as np
+import os.path
 import random
+import json
 
 # This class creates a strain gauge instrument model, simulating its physical properties.
 # Properties can be given as parameters after instantiation, but is heavily advised
@@ -19,7 +21,7 @@ class StrainGauge(object):
     def __init__(self, Rzero, c, rho, Gf, err = 0):
 
         self.Rzero      = Rzero
-        self.c          = c
+        self.c          = c 
         self.Gf         = Gf
         self.err        = err
 
@@ -160,8 +162,68 @@ class ApproximationError(RandomVariable):
         else:
             realizationArray = strainGauge1.realizationArray - strainGauge2.realizationArray
             RandomVariable.__init__(self, realizationArray.mean(), realizationArray.std(),'uniform')
-            pass
         pass
+
+    def simulateApproximationError(self, simulationSamples, re_simulate = False):
+        
+        Filename = 'ApproximationError.json'
+
+        if os.path.exists(Filename) and re_simulate == False:
+            with open(Filename, "r") as read_file:
+                data = json.load(read_file)
+            self.__init__()
+            self.mean = data['mean']
+            self.std = data['std']
+            self.dist = data['dist']
+        
+        else:
+            rho = RandomVariable(mean = 190, std = 20, dist = 'gaussian', n = simulationSamples)
+
+            ### Approximate Strain Gauge Model
+            Rzero         = 9000    # Initial resistance
+            c             = 1.7    # Strain gauge half length (mm)
+            Gf            = 8      # Gauge factor
+            sgApproximate = StrainGauge(Rzero, c, rho, Gf)
+
+            ### Real Strain Gauge Model
+            Rzero     = RandomVariable(9000, 100, 'gaussian')    # Initial resistance
+            c         = RandomVariable(1.7, 0, 'nonRandom')    # Strain gauge half length (mm)
+            Gf        = RandomVariable(8, 1, 'gaussian')       # Gauge factor
+            err       = RandomVariable(0, 0,'uniform')
+            err.uniformLowHigh(-0.5, 0.5)
+            sgReal = StrainGauge(Rzero, c, rho, Gf, err = err)
+        
+            self.__init__(sgApproximate,sgReal)
+            with open(Filename, "w") as write_file:
+                json.dump(self.__dict__, write_file)
+        
+
+# ######################### #
+# Prior Approximation Error #
+# ######################### #
+
+def simulateApproximationError(ApproximationError, simulationSamples):
+        
+        
+                                                                # Number of samples to test
+         # Radius of curvature
+
+        ### Approximate Strain Gauge Model
+        Rzero         = 9000    # Initial resistance
+        c             = 1.7    # Strain gauge half length (mm)
+        Gf            = 8      # Gauge factor
+        sgApproximate = ig.StrainGauge(Rzero, c, rho, Gf)
+
+        ### Real Strain Gauge Model
+        Rzero     = ig.RandomVariable(9000, 100, 'gaussian')    # Initial resistance
+        c         = ig.RandomVariable(1.7, 0, 'nonRandom')    # Strain gauge half length (mm)
+        Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
+        err       = ig.RandomVariable(0, 0,'uniform')
+        err.uniformLowHigh(-0.5, 0.5)
+        sgReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
+
+        ### Approximation Error Random Variable
+        #return ig.ApproximationError(sgApproximate,sgReal)
 
 # ##################
 # Class Testing Area
@@ -180,8 +242,5 @@ if __name__ == '__main__':
     R1 = StrainGauge(Rzero, c, rho, Gf, err = 0)
     R2 = StrainGauge(3,2,rho2,8, err = dev)
     eps = ApproximationError(R1, R2)
-
-    import json
-
 
     print('ok')
