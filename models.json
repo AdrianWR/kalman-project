@@ -1,0 +1,13 @@
+{   
+    "id"        : 1,
+    "name"      : "sine",
+    "function"  : "200*np.sin(0.01*t) + 100",
+    "filter_parameters": {
+        "initial_x" : 15,
+        "initial_p" : 100,
+        "process_covariance": 100
+    }
+
+
+}
+
