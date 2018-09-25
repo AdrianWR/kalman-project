@@ -1,13 +1,36 @@
-{   
-    "id"        : 1,
-    "name"      : "sine",
-    "function"  : "200*np.sin(0.01*t) + 100",
-    "filter_parameters": {
-        "initial_x" : 15,
-        "initial_p" : 100,
-        "process_covariance": 100
+[
+
+    {   
+        "id"        : 1,
+        "name"      : "constant",
+        "function"  : "np.full(t.shape, 10)",
+        "filter_parameters": {
+            "initial_x" : 15,
+            "initial_p" : 100,
+            "process_covariance": 0.005
+        }
+    },
+
+    {   
+        "id"        : 2,
+        "name"      : "sine",
+        "function"  : "100*np.sin(0.01*t) + 100",
+        "filter_parameters": {
+            "initial_x" : 15,
+            "initial_p" : 100,
+            "process_covariance": 1
+        }
+    },
+
+    {   
+        "id"        : 3,
+        "name"      : "linear",
+        "function"  : "-0.25*t + 100",
+        "filter_parameters": {
+            "initial_x" : 15,
+            "initial_p" : 100,
+            "process_covariance": 0.01
+        }
     }
 
-
-}
-
+]
