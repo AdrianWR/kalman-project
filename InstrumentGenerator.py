@@ -202,28 +202,28 @@ class ApproximationError(RandomVariable):
 # Prior Approximation Error #
 # ######################### #
 
-def simulateApproximationError(ApproximationError, simulationSamples):
+# def simulateApproximationError(ApproximationError, simulationSamples):
         
         
-                                                                # Number of samples to test
-         # Radius of curvature
+#                                                                 # Number of samples to test
+#          # Radius of curvature
 
-        ### Approximate Strain Gauge Model
-        Rzero         = 9000    # Initial resistance
-        c             = 1.7    # Strain gauge half length (mm)
-        Gf            = 8      # Gauge factor
-        sgApproximate = ig.StrainGauge(Rzero, c, rho, Gf)
+#         ### Approximate Strain Gauge Model
+#         Rzero         = 9000    # Initial resistance
+#         c             = 1.7    # Strain gauge half length (mm)
+#         Gf            = 8      # Gauge factor
+#         sgApproximate = StrainGauge(Rzero, c, rho, Gf)
 
-        ### Real Strain Gauge Model
-        Rzero     = ig.RandomVariable(9000, 100, 'gaussian')    # Initial resistance
-        c         = ig.RandomVariable(1.7, 0, 'nonRandom')    # Strain gauge half length (mm)
-        Gf        = ig.RandomVariable(8, 1, 'gaussian')       # Gauge factor
-        err       = ig.RandomVariable(0, 0,'uniform')
-        err.uniformLowHigh(-0.5, 0.5)
-        sgReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
+#         ### Real Strain Gauge Model
+#         Rzero     = RandomVariable(9000, 100, 'gaussian')    # Initial resistance
+#         c         = RandomVariable(1.7, 0, 'nonRandom')    # Strain gauge half length (mm)
+#         Gf        = RandomVariable(8, 1, 'gaussian')       # Gauge factor
+#         err       = RandomVariable(0, 0,'uniform')
+#         err.uniformLowHigh(-0.5, 0.5)
+#         sgReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
 
-        ### Approximation Error Random Variable
-        #return ig.ApproximationError(sgApproximate,sgReal)
+#         ### Approximation Error Random Variable
+#         #return ig.ApproximationError(sgApproximate,sgReal)
 
 # ##################
 # Class Testing Area
