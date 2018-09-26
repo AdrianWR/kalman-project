@@ -103,9 +103,7 @@ class RandomVariable(object):
         
         self.mean = mean
         self.std = std
-        #self.var = std**2
         self.dist = dist
-        #self.distributionArray = np.array([mean])
         self.n = n
     
     def __call__(self):
