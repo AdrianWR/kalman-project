@@ -5,6 +5,7 @@
 # calculate its radius of curvature. The Kalman Filter must be of the
 # extended type, regarding the model non-linearity.
 
+from subprocess import check_output
 import InstrumentGenerator as ig
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +17,7 @@ import json
 #############################################
 
 approxErr = ig.ApproximationError()
-approxErr.simulateApproximationError(4000, re_simulate = True)
+approxErr.simulateApproximationError(4000, re_simulate = False)
 
 ############################
 ###  SIMULATION ANALYSIS ###
@@ -24,35 +25,42 @@ approxErr.simulateApproximationError(4000, re_simulate = True)
 
 # Modeling
 
-chest_breadth = 20     # Chest Breadth / chest_breadth = 2a
-chest_depth = 10     # chest depth / chest_depth = 2b
-
-R_min = chest_depth**2/(2*chest_breadth)
-R_max = chest_breadth**2/(2*chest_depth)
-
-
-
+chestData = check_output(["Rscript","bodydata.r"], shell = True)
+chestData = chestData.decode("UTF-8")
+chestData = json.loads(chestData.splitlines()[0])
+#chestData = json.loads
+rc_min = chestData[0]
+rc_max = chestData[1]
 
 ### Function Models - Storage Retrieval
 
 # CHANGE HERE!!!
-model_required = 3
+model_required = 1
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
         break
 
-    #y = 200*np.sin(0.01*x) + 100 # Sine Function
-    #y = np.full(x.shape, 10)      # Constant Function
-    #y = -0.25*x + 100              # Linear Function
 
 ### Computational Parameters
 
-n = 300
+n = 200
 t = np.array(range(1,n+1))
-def y(t): return eval(model["function"])
-rho = ig.RandomVariable(0, 0, 'nonRandom', n)
-rho.distributionArray = y(t)
+def y_min(t): return np.full(t.shape, rc_min["mean"]))
+def y_max(t): return np.full(t.shape, rc_max["mean"]))
+
+
+rho = []
+for i in range(0,3):
+    #gauge = ig.RandomVariable(rc_max["mean"], rc_max["std"], 'gaussian', n)
+    gauge = ig.RandomVariable()
+    if (i % 2 == 0):        
+        gauge.distributionArray = y_max(t)
+    else:
+        gauge.distributionArray = y_min(t)
+    rho.append(gauge)
+#rho1 = ig.RandomVariable(0, 0, 'nonRandom', n)
+#rho.distributionArray = y(t)
 
 # ----------------------- #
 # - Strain Gauge Models - #

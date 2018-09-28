@@ -31,10 +31,6 @@ for model in models:
     if model["id"] == model_required:
         break
 
-    #y = 200*np.sin(0.01*x) + 100 # Sine Function
-    #y = np.full(x.shape, 10)      # Constant Function
-    #y = -0.25*x + 100              # Linear Function
-
 ### Computational Parameters
 
 n = 300
