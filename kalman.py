@@ -39,7 +39,7 @@ class ExtendedKalmanFilter(object):
                 Q = self.Q
 
                 self.x = self.f(x)
-                self.P = Fk*P*Fk.T + Q
+                self.P = dot(dot(Fk,P),Fk.T) + Q
 
 
         def update(self, z):
@@ -50,11 +50,11 @@ class ExtendedKalmanFilter(object):
                 H = self.H(x)
                 y = z - self.h(x)
 
-                I = np.array([1.0])
-                K = P*H.T
-                K = K/(H*P*H.T+R)
-                self.x = x + K*y
-                self.P = (I-K*H)*P
+                I = eye(len(x))
+                K = dot(P, H.T)
+                K = K/(dot(dot(H,P),H.T)+R)
+                self.x = x + dot(K,y)
+                self.P = dot(I-dot(K,H)),P)
                 # Joseph Form
                 #self.P = (I-self.K*HK(x))*P*(I-self.K*HK(x)).T + P*self.Q*P.T
                 #self.P = (self.P+self.P.T)/2
