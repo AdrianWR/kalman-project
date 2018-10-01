@@ -35,7 +35,7 @@ rc_max = chestData[1]
 ### Function Models - Storage Retrieval
 
 # CHANGE HERE!!!
-model_required = 1
+model_required = 4
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -46,19 +46,44 @@ for model in models:
 
 n = 200
 t = np.array(range(1,n+1))
-def y_min(t): return np.full(t.shape, rc_min["mean"]))
-def y_max(t): return np.full(t.shape, rc_max["mean"]))
+def y_min(t): return np.full(t.shape, rc_min["mean"])
+def y_max(t): return np.full(t.shape, rc_max["mean"])
 
 
-rho = []
-for i in range(0,3):
+#rho = []
+strainGaugeTrueWithNoise = []
+strainGaugeApproximate = []
+yMeasured = []
+for i in range(0,4):
     #gauge = ig.RandomVariable(rc_max["mean"], rc_max["std"], 'gaussian', n)
-    gauge = ig.RandomVariable()
+    
+    rho = ig.RandomVariable()
     if (i % 2 == 0):        
-        gauge.distributionArray = y_max(t)
+        rho.distributionArray = y_max(t)
     else:
-        gauge.distributionArray = y_min(t)
-    rho.append(gauge)
+        rho.distributionArray = y_min(t)
+    
+    Rzero = 9000
+    c = 1.7
+    Gf = 8
+    sGA = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
+    strainGaugeApproximate.append(sGA)
+
+    Rzero   = ig.RandomVariable(Rzero, 100, 'gaussian')
+    c       = ig.RandomVariable(c, 0.1, 'gaussian')
+    Gf      = ig.RandomVariable(Gf, 0.4, 'gaussian')
+    noise = ig.RandomVariable(dist = 'uniform')
+    noise.uniformLowHigh(-500, 500)
+    sGTwn   = ig.StrainGauge(Rzero(), c(), rho, Gf(), err = noise)
+    strainGaugeTrueWithNoise.append(sGTwn)
+    yMeasured.append(sGTwn.realizationArray)
+
+yMeasured = np.array(yMeasured)
+yMeasured = np.transpose(yMeasured)
+
+
+
+
 #rho1 = ig.RandomVariable(0, 0, 'nonRandom', n)
 #rho.distributionArray = y(t)
 
@@ -67,25 +92,25 @@ for i in range(0,3):
 # ----------------------- #
 
 # Strain Gauge True Model
-Rzero = 9216
-c = 1.532
-Gf = 8.1
-strainGaugeTrue = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
+# Rzero = 9216
+# c = 1.532
+# Gf = 8.1
+# strainGaugeTrue = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
-# Strain Gauge True Model With Noise
-noise = ig.RandomVariable(dist = 'uniform')
-noise.uniformLowHigh(-500, 500)
-strainGaugeMeasured = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
+# # Strain Gauge True Model With Noise
+# noise = ig.RandomVariable(dist = 'uniform')
+# noise.uniformLowHigh(-500, 500)
+# strainGaugeMeasured = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
 
-# Strain Gauge Approximate Model
-Rzero = 9000
-c = 1.7
-Gf = 8
-strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
+# # Strain Gauge Approximate Model
+# Rzero = 9000
+# c = 1.7
+# Gf = 8
+# strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
-yTrue = strainGaugeTrue.realizationArray
-yMeasured = strainGaugeMeasured.realizationArray
-cov_yMeasured = approxErr.var
+#yTrue = strainGaugeTrue.realizationArray
+#yMeasured = strainGaugeMeasured.realizationArray
+### cov_yMeasured = approxErr.var
 
 ########################
 ### KALMAN FILTERING ###
@@ -93,7 +118,11 @@ cov_yMeasured = approxErr.var
 
 ### Strain Gauge Process Equations
 
-# Process Function
+Rzero = 9000
+c = 1.7
+Gf = 8
+
+# Process FunctionyMeasured
 ### Random Walk Model
 def f(x):
     return x
@@ -109,11 +138,11 @@ def H(x):
     return dR
 
 # Filter Parameters
-x0 = np.array([model["filter_parameters"]["initial_x"]])
-P0 = np.array([model["filter_parameters"]["initial_p"]])
-Fk = np.array([1])                                          #transition matrix
-R = np.array([approxErr.var])
-Q = np.array([model["filter_parameters"]["process_covariance"]])
+x0 = np.array(model["filter_parameters"]["initial_x"])
+P0 = np.array(model["filter_parameters"]["initial_p"])
+Fk = np.eye(4)                                          #transition matrix
+R = np.ones(4)*approxErr.var
+Q = np.array(model["filter_parameters"]["process_covariance"])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
@@ -121,10 +150,10 @@ Filter.h = h
 Filter.H = H
 
 Filtered         = kalman.Result(Filter, yMeasured)
-radius_true      = strainGaugeTrue.measuredStateArray
+#radius_true      = strainGaugeTrue.measuredStateArray
 radius_filter    = Filtered.x
 error_covariance = Filtered.P
-yEstimated       = h(radius_filter) - approxErr.mean
+#yEstimated       = h(radius_filter) - approxErr.mean
 
 ################
 ### PLOTTING ###
@@ -136,14 +165,16 @@ plt.rc('font', family='serif')
 #plt.tight_layout()
 
 #plt.subplot(211)
-plt.plot(yTrue,'k', label = 'R - True')
-plt.plot(yMeasured,'r.', label = 'R - Measurements')
-plt.plot(yEstimated, 'b-', label = 'R - Estimated')
-plt.ylim(yTrue.min()*0.95, yTrue.max()*1.05)
+#plt.plot(yTrue,'k', label = 'R - True')
+#plt.plot(yMeasured, label = 'Measurement - R')
+for i in range(0,4):
+    #plt.plot(yEstimated[:,i], label = 'R - Estimated' + str*(i))
+    plt.plot(yMeasured[:,i], label = 'Measurement: R' + str(i))
+plt.ylim(yMeasured.min()*0.95, yMeasured.max()*1.05)
 plt.ylabel('Resistance (' + r'$\Omega$' + ')')
 plt.title('Strain Gauge Resistance')
 plt.legend()
-#plt.show()
+plt.show()
 
 plt.figure(2)
 #plt.subplot(212)

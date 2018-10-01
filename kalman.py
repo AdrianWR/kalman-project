@@ -43,18 +43,19 @@ class ExtendedKalmanFilter(object):
 
 
         def update(self, z):
+                
+                I = eye(len(self.x))
 
                 x = self.x
                 P = self.P
                 R = self.R
-                H = self.H(x)
+                H = self.H(x)*I
                 y = z - self.h(x)
 
-                I = eye(len(x))
                 K = dot(P, H.T)
                 K = K/(dot(dot(H,P),H.T)+R)
                 self.x = x + dot(K,y)
-                self.P = dot(I-dot(K,H)),P)
+                self.P = dot(I-dot(K,H),P)
                 # Joseph Form
                 #self.P = (I-self.K*HK(x))*P*(I-self.K*HK(x)).T + P*self.Q*P.T
                 #self.P = (self.P+self.P.T)/2
@@ -74,6 +75,7 @@ class ExtendedKalmanFilter(object):
                         x = self.filterSample(observer[i])
                         signal.append(x)
                 return np.array(signal)
+                #[number of sample][x or P][sensor row]
 
 class Result(ExtendedKalmanFilter):
 
