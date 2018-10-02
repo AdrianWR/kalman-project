@@ -38,8 +38,8 @@
         "name"      : "chest",
         "function"  : "Declared in main_chest.py",
         "filter_parameters": {
-            "initial_x" : [90, 90, 90, 90],
-            "initial_p" : [[100, 0, 0, 0],[0, 100, 0, 0],[0, 0, 100, 0],[0, 0, 0, 100]],
+            "initial_x" : [100, 100, 100, 100],
+            "initial_p" : [[100, 0, 0, 0],[0, 100, 0, 0],[0, 0,100, 0],[0, 0, 0, 100]],
             "process_covariance": [0.01, 0.01, 0.01, 0.01]
         }
     }
