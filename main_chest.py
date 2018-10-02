@@ -61,9 +61,9 @@ for i in range(0,4):
     else:
         rho.distributionArray = y_min(t)
     
-    #Rzero = 9000
-    #c = 1.7
-    #Gf = 8
+    Rzero = 9000
+    c = 1.7
+    Gf = 8
     #sGA = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
     #strainGaugeApproximate.append(sGA)
 
