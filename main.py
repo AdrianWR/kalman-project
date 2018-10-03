@@ -10,13 +10,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import kalman
 import json
+from numpy import array, transpose
+from subprocess import check_output
+
 
 #############################################
 ### APPROXIMATION ERROR METHOD SIMULATION ###
 #############################################
 
 approxErr = ig.ApproximationError()
-approxErr.simulateApproximationError(4000, re_simulate = True)
+approxErr.simulateApproximationError(4000, re_simulate = False)
 
 ############################
 ###  SIMULATION ANALYSIS ###
@@ -25,7 +28,7 @@ approxErr.simulateApproximationError(4000, re_simulate = True)
 ### Function Models - Storage Retrieval
 
 # CHANGE HERE!!!
-model_required = 3
+model_required = 2
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -33,7 +36,7 @@ for model in models:
 
 ### Computational Parameters
 
-n = 300
+n = 400
 t = np.array(range(1,n+1))
 def y(t): return eval(model["function"])
 rho = ig.RandomVariable(0, 0, 'nonRandom', n)
@@ -60,8 +63,8 @@ c = 1.7
 Gf = 8
 strainGaugeApproximate = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
 
-yTrue = strainGaugeTrue.realizationArray
-yMeasured = strainGaugeMeasured.realizationArray
+yTrue       = transpose(array([strainGaugeTrue.realizationArray]))
+yMeasured   = transpose(array([strainGaugeMeasured.realizationArray]))
 cov_yMeasured = approxErr.var
 
 ########################
@@ -86,59 +89,81 @@ def H(x):
     return dR
 
 # Filter Parameters
-x0 = np.array([model["filter_parameters"]["initial_x"]])
-P0 = np.array([model["filter_parameters"]["initial_p"]])
-Fk = np.array([1])                                          #transition matrix
-R = np.array([approxErr.var])
-Q = np.array([model["filter_parameters"]["process_covariance"]])
+x0 = array([model["filter_parameters"]["initial_x"]])
+P0 = array([model["filter_parameters"]["initial_p"]])
+Fk = array([[1]])                                          #transition matrix
+R = array([[approxErr.var]])
+Q = array([model["filter_parameters"]["process_covariance"]])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
 Filter.f = f
 Filter.h = h
 Filter.H = H
 
-Filtered         = kalman.Result(Filter, yMeasured)
-radius_true      = strainGaugeTrue.measuredStateArray
-radius_filter    = Filtered.x
-error_covariance = Filtered.P
-yEstimated       = h(radius_filter) - approxErr.mean
+Filtered            = kalman.Result(Filter, yMeasured)
+xTrue               = transpose(array([strainGaugeTrue.measuredStateArray]))
+xEstimated          = array(Filtered.x)
+yEstimated          = (h(array(Filtered.x)) - approxErr.mean)
+error_covariance    = array(Filtered.P)
 
 ################
 ### PLOTTING ###
 ################
 
-plt.figure(1)#num = 1, figsize=(8,8))
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
-#plt.tight_layout()
 
-#plt.subplot(211)
-plt.plot(yTrue,'k', label = 'R - True')
-plt.plot(yMeasured,'r.', label = 'R - Measurements')
-plt.plot(yEstimated, 'b-', label = 'R - Estimated')
-plt.ylim(yTrue.min()*0.95, yTrue.max()*1.05)
-plt.ylabel('Resistance (' + r'$\Omega$' + ')')
-plt.title('Strain Gauge Resistance')
-plt.legend()
-#plt.show()
 
-plt.figure(2)
-#plt.subplot(212)
-#plt.plot(radius_measurement, 'g--', label = 'Measured')
-plt.plot(radius_filter,'g-', label = 'Estimated')
-plt.plot(radius_true, label = 'True')
-plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
-plt.title('Radius of Curvature')
-plt.legend()
-#plt.yscale('log')
+for i in range(len(xTrue[0])):
 
-plt.figure(3)
-# plt.subplot(313)
-plt.plot(error_covariance, label = 'Error Covariance')
-plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
+    plt.figure(i, figsize = (10,6))
+    plt.subplot(211)
+    plt.plot(yMeasured[:,i], label = 'Measurement: R' + str(i))
+    plt.plot(yEstimated[:,i], label = 'Estimation: R' + str(i))
+    #plt.ylim(yMeasured.min()*0.95, yMeasured.max()*1.05)
+    plt.ylabel('Resistance (' + r'$\Omega$' + ')')
+    plt.title('Strain Gauge Resistance')
+    plt.legend()
+
+    plt.subplot(212)
+    plt.plot(xEstimated[:,i],'g-', label = 'Estimation: R' + str(i))
+    plt.plot(xTrue[:,i], label = 'True: ' + r'$\rho$' + str(i))
+    plt.ylim(0, xTrue.max()*1.5)
+    plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
+    plt.title('Radius of Curvature')
+    plt.legend()
+
+    plt.show()
+
+#OLD CODE
+
+# plt.figure(1)#num = 1, figsize=(8,8))
+# plt.rc('text', usetex=True)
+# plt.rc('font', family='serif')
+# #plt.tight_layout()
+
+# #plt.subplot(211)
+# plt.plot(yTrue,'k', label = 'R - True')
+# plt.plot(yMeasured[:,0],'r.', label = 'R - Measurements')
+# plt.plot(yEstimated[:,0], 'b-', label = 'R - Estimated')
+# plt.ylim(yTrue.min()*0.95, yTrue.max()*1.05)
+# plt.ylabel('Resistance (' + r'$\Omega$' + ')')
+# plt.title('Strain Gauge Resistance')
+# plt.legend()
+# #plt.show()
+
+# plt.figure(2)
+# #plt.subplot(212)
+# #plt.plot(radius_measurement, 'g--', label = 'Measured')
+# plt.plot(xEstimated[:,0],'g-', label = 'Estimated')
+# plt.plot(xTrue[:,0], label = 'True')
+# plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
+# plt.title('Radius of Curvature')
+# plt.legend()
+# #plt.yscale('log')
+
+# plt.show()
+
+plt.figure(1)
+plt.plot(error_covariance[:,0], label = 'Error Covariance')
 plt.title('Error Covariance')
 plt.legend()
-
-#plt.savefig("./simu.png", metadata = {'x0': str(x0), 'P0': str(P0), 'R': str(R), 'Q': str(Q)}, dpi=96)
 plt.show()
-#print('ok')

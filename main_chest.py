@@ -50,7 +50,7 @@ t = array(range(1,n+1))
 def y_min(t): return np.full(t.shape, rc_min["mean"])
 def y_max(t): return np.full(t.shape, rc_max["mean"])
 
-strainGaugeTrueWithNoise = []
+#strainGaugeMeasured = []
 yMeasured = []
 xTrue = []
 for i in range(0,4):
@@ -78,15 +78,13 @@ for i in range(0,4):
     sGT     = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
     xTrue.append(sGT.measuredStateArray)
     sGTwn   = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
-    strainGaugeTrueWithNoise.append(sGTwn)
+    #strainGaugeMeasured.append(sGTwn)
     yMeasured.append(sGTwn.realizationArray)
 
 yMeasured   = array(yMeasured)
 yMeasured   = transpose(yMeasured)
 xTrue       = array(xTrue)
 xTrue       = transpose(xTrue)
-
-
 
 ########################
 ### KALMAN FILTERING ###
@@ -131,6 +129,8 @@ Filter.H = H
 Filtered    = kalman.Result(Filter, yMeasured)
 xEstimated  = array(Filtered.x)
 yEstimated  = h(xEstimated) - approxErr.mean
+covarianceEigenvalues, v = np.linalg.eig(array(Filtered.P))
+covarianceEigenvalues = np.real(covarianceEigenvalues)
 
 
 ################
@@ -141,9 +141,9 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 #plt.tight_layout()
 
-for i in range(0,4):
+for i in range(4):
 
-    plt.figure(i, figsize = (10,6))
+    plt.figure(i+1, figsize = (10,6))
     plt.subplot(211)
     plt.plot(yMeasured[:,i], label = 'Measurement: R' + str(i))
     plt.plot(yEstimated[:,i], label = 'Estimation: R' + str(i))
@@ -159,7 +159,17 @@ for i in range(0,4):
     plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
     plt.title('Radius of Curvature')
     plt.legend()
+    
+    # plt.figure(0)
+    # plt.plot(covarianceEigenvalues[:,i], label = 'Error Covariance '+ r'$\rho$' + str(i))
+    # plt.yscale('log')
+    # plt.title('Error Covariance')
+    # plt.legend()
 
-    plt.savefig("./images/torax_R" + str(i) + ".png", dpi=96)
 
-#plt.show()
+    #plt.savefig("./images/torax_R" + str(i) + ".png", dpi=96)
+
+plt.show()
+
+#P = array(Filtered.P)
+
