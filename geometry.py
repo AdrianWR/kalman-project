@@ -1,9 +1,10 @@
-import numpy as np
+#import numpy as np
+#import sympy
 import json
 from numpy import pi, linspace
-#from sympy import *
+from scipy.special import ellipeinc
+from sympy import Symbol, solve, sqrt
 from sympy.geometry import Point, Ellipse
-from sympy.abc import t
 from subprocess import check_output
 
 
@@ -15,14 +16,52 @@ rc_max = chestData[1]
 a = int(chestData[2]['mean'])
 b = int(chestData[3]['mean'])
 
-n = 12
 
-# MOMENTO 1
-e1 = Ellipse(Point(-a, 0), hradius = a, vradius = b)
-parametric = e1.arbitrary_point(t)
+# MOMENT 0
+e0 = Ellipse(Point(0, 0), hradius = a, vradius = b)
+P = e0.circumference
+E = e0.eccentricity
+theta = Symbol('theta')
 
-samples = linspace(0, 2*pi, n)
-e1_points = []
-for i in samples:
-    e1_points.append(parametric.evalf(subs={t:i}))
+x = Symbol('x')
+y = Symbol('y')
+P = pi*(3*(x+y)-sqrt((3*x + y)*(x + 3*y))) - P
+x1, x2 = solve(P,x)
+
+def theta_K(ellipse):
+
+    c = 0
+    dtheta = 0
+    C = ellipse.circumference.evalf()
+    e = round(ellipse.eccentricity.evalf(),3)
+
+    radlist = []
+    k = 0
+    while (k < 4):
+        while (c < k*C/12):
+            c = 4*a*ellipeinc(dtheta, e**2)
+            dtheta += 0.01
+        radlist.append(round(dtheta,2))
+        k += 1
+    return radlist
+
+theta_K(e0)
+# Iterations
+n = 20
+nGauges = 12
+a = np.zeros(n)
+b = linspace(b,1.2*b,n)
+
+e_points = []
+for i in range(n):
+
+    #x = x2.evalf(subs={y:b[i]})
+    #y = b[i]
+    e = Ellipse(Point(0, 0), hradius = x2.evalf(subs={y:b[i]}), vradius = b[i])
+    
+    parametric = e.arbitrary_point(theta)
+    samples = linspace(0, 2*pi, nGauges)
+    e_points.append([])
+    for j in samples:
+        e_points[i].append(parametric.evalf(subs={theta:j}))
 
