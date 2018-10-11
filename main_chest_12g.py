@@ -25,11 +25,58 @@ approxErr.simulateApproximationError(4000, re_simulate = False)
 ###  SIMULATION ANALYSIS ###
 ############################
 
+def draw_ellipse(ellipse):
+    
+    a, b = ellipse['semiaxis']
+    t = np.linspace(0, 2*np.pi, 100)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.scatter(*zip(*ellipse['coordinates']))
+    ax.plot(a*np.cos(t), b*np.sin(t), 'g--')
+    ax.set_xlim(-160, 160)
+    ax.set_ylim(-160, 160)
+
+    #plt.show()
+
+def ellipse_animation(ellipses):
+
+    from matplotlib.animation import FuncAnimation
+
+    t = np.linspace(0, 2*np.pi, 100)
+    fig = plt.figure()
+    ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
+    eRound, = ax.plot([], [], lw=2)
+    ePoints, = ax.scatter([], [])
+
+    def init():
+        eRound.set_data([], [])
+        ePoints.set_data([], [])
+        return eRound, ePoints
+
+    def animate(i):
+        a, b = ellipses[i]['semiaxis']
+        x, y = [a*np.cos(t), b*np.sin(t)]
+        eRound.set_data(x, y)
+        ePoints.set_data(*zip(*ellipse['coordinates']))
+        return eRound, ePoints
+
+    anim = FuncAnimation(fig, animate, init_func=init,
+                               frames=20, interval=200, blit=True)
+    plt.show()
+
+
+
 # Modeling
+data = json.load(open("ellipses.json","r"))
+ellipse_animation(data)
+draw_ellipse(data[0])
+draw_ellipse(data[-1])
+
 ### Function Models - Storage Retrieval
 
 # CHANGE HERE!!!
-model_required = 4
+model_required = 5
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -40,8 +87,7 @@ for model in models:
 
 n = 500
 t = array(range(1,n+1))
-def y_min(t): return np.full(t.shape, rc_min["mean"])
-def y_max(t): return np.full(t.shape, rc_max["mean"])
+def y(t): return np.full(t.shape, rc_min["mean"])
 
 #strainGaugeMeasured = []
 yMeasured = []

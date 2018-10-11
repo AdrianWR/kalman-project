@@ -67,21 +67,22 @@ def ellipse_points(ellipse, n = 12):
     return points
 
 
-# Iterations
+# Iterations Information
 n = 20
 nGauges = 12
 a = np.zeros(n)
 b = linspace(b,1.2*b,n)
 
-semiaxis_ellipses = []
-coordinates_ellipses = []
-rho_ellipses = []
+
+# Print ellipse objects information to file
+ellipses = []
 for i in range(n):
     e = Ellipse(Point(0, 0), hradius = x2.evalf(subs={y:b[i]}), vradius = b[i])
-    semiaxis_ellipses.append([e.hradius, e.vradius])
     ePoints = ellipse_points(e, nGauges)
-    ellipses.append(ePoints)
-    rho_ellipses.append(radius_of_curvature(e, ePoints))
-
-data = ({"coordinates" : coordinates_ellipses}, {"semiaxis" : semiaxis_ellipses}, {"radius of curvature" : rho_ellipses})
-json.dump(data, open('ellipses.json', 'w'))
+    data = {
+        "coordinates": ePoints,
+        "radius_of_curvature": radius_of_curvature(e, ePoints),
+        "semiaxis": [e.hradius.__round__(2), e.vradius.__round__(2)]
+    }
+    ellipses.append(data)
+json.dump(ellipses, open('ellipses.json', 'w'), indent=2)
