@@ -38,6 +38,7 @@ def radius_of_curvature(ellipse, points):
         rho_ellipse.append(rho.__round__(2))
     return rho_ellipse
 
+## Distance between gauges is maintened equal
 def ellipse_points(ellipse, n = 12):
 
     c = 0
@@ -66,6 +67,21 @@ def ellipse_points(ellipse, n = 12):
         k += 1
     return points
 
+## Angle is maintened equal
+def ellipse_points2(ellipse, n = 12):
+
+    a = round(ellipse.hradius,2)
+    b = round(ellipse.vradius,2)
+
+    points = [0]*n
+    #i = 0
+    for i in range(0, n):
+        angle = i*(2*pi/n)
+        x = a*np.cos(angle)
+        y = b*np.sin(angle)
+        points[i] = [x.__round__(2),y.__round__(2)]
+        #i += 1
+    return points
 
 # Iterations Information
 n = 20
@@ -78,7 +94,7 @@ b = linspace(b,1.2*b,n)
 ellipses = []
 for i in range(n):
     e = Ellipse(Point(0, 0), hradius = x2.evalf(subs={y:b[i]}), vradius = b[i])
-    ePoints = ellipse_points(e, nGauges)
+    ePoints = ellipse_points2(e, nGauges)
     data = {
         "coordinates": ePoints,
         "radius_of_curvature": radius_of_curvature(e, ePoints),
@@ -86,3 +102,4 @@ for i in range(n):
     }
     ellipses.append(data)
 json.dump(ellipses, open('ellipses.json', 'w'), indent=2)
+print('Number of ellipses generated: '+ n.__str__() +'. Each one with '+ nGauges.__str__() +' strain gauges.')

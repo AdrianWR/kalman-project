@@ -3,6 +3,7 @@
 
 import numpy as np
 from numpy import dot, eye, array
+from numpy.linalg import inv
 
 ### DEFINIÇÕES RELEVANTES
 # As variáveis inseridas na inicialização da classe
@@ -53,7 +54,8 @@ class ExtendedKalmanFilter(object):
                 y = z - self.h(x)
 
                 K = dot(P, H.T)
-                K = K/(dot(dot(H,P),H.T)+R)
+                #K = K/(dot(dot(H,P),H.T)+R)
+                K = K*inv(((H @ P) @ H.T) + R)
                 self.x = x + dot(K,y)
                 self.P = dot(I-dot(K,H),P)
                 # Joseph Form

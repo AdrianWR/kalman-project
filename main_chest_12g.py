@@ -43,19 +43,15 @@ def draw_ellipse(ellipse):
 
 def ellipse_animation(ellipses):
 
-
     t = np.linspace(0, 2*np.pi, 100)
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
     ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
 
-    coordinates = array(ellipses[0]['coordinates'])
-    x = coordinates[:,0]
-    y = coordinates[:,1]
+    #coordinates = array(ellipses[0]['coordinates'])
     scat = ax.scatter([],[], s=100)
     scat.set_color('white')
     scat.set_edgecolor('red')
-    
 
     line = ax.plot([], [], lw=2)[0]
     line.set_data([], [])
@@ -71,18 +67,16 @@ def ellipse_animation(ellipses):
         coord = array(ellipses[i]['coordinates'])
         scat.set_offsets(coord)
         
-        #print('Frames: %d' %i)
         return line, scat,
 
     anim = FuncAnimation(fig, update, fargs = (fig, line, scat), frames=20, interval=50, blit=True)
     plt.show()
 
 
-
 # Modeling
 data = json.load(open("ellipses.json","r"))
-ellipse_animation(data)
-draw_ellipse(data[0])
+#ellipse_animation(data)
+#draw_ellipse(data[0])
 #draw_ellipse(data[-1])
 
 ### Function Models - Storage Retrieval
@@ -95,47 +89,49 @@ for model in models:
         break
 
 
+# class EllipseModel(object):
+
+#     def __init__(self, nGauges):
+#         self.nGauges = nGauges
+
 ### Computational Parameters
 
-n = 500
+n = 100
 t = array(range(1,n+1))
-def y(t): return np.full(t.shape, rc_min["mean"])
+def y(t, const): return np.full(t.shape, const)
 
-#strainGaugeMeasured = []
-yMeasured = []
-xTrue = []
-for i in range(0,4):
-    
-    rho = ig.RandomVariable()
-    if (i % 2 == 0):        
-        rho.distributionArray = y_max(t)
-    else:
-        rho.distributionArray = y_min(t)
-    
-    Rzero = 9000
-    c = 1.7
-    Gf = 8
-    #sGA = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
-    #strainGaugeApproximate.append(sGA)
 
-    Rzero   = ig.RandomVariable(Rzero, 100, 'gaussian')
-    Rzero   = Rzero()
-    c       = ig.RandomVariable(c, 0.1, 'gaussian')
-    c       = c()
-    Gf      = ig.RandomVariable(Gf, 0.4, 'gaussian')
-    Gf      = Gf()
-    noise = ig.RandomVariable(dist = 'uniform')
-    noise.uniformLowHigh(-200, 200)
-    sGT     = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
-    xTrue.append(sGT.measuredStateArray)
-    sGTwn   = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
-    #strainGaugeMeasured.append(sGTwn)
-    yMeasured.append(sGTwn.realizationArray)
 
-yMeasured   = array(yMeasured)
-yMeasured   = transpose(yMeasured)
-xTrue       = array(xTrue)
-xTrue       = transpose(xTrue)
+
+for i in range(0, data.__len__()):
+    yMeasured = []
+    xTrue = []
+    for j in range(0, data[0]['radius_of_curvature'].__len__()):
+        
+        rho = ig.RandomVariable()  
+        rho.distributionArray = y(t, data[0]['radius_of_curvature'][j])
+        
+        Rzero = 9000
+        c = 1.7
+        Gf = 8
+
+        Rzero   = ig.RandomVariable(Rzero, 100, 'gaussian')
+        Rzero   = Rzero()
+        c       = ig.RandomVariable(c, 0.1, 'gaussian')
+        c       = c()
+        Gf      = ig.RandomVariable(Gf, 0.4, 'gaussian')
+        Gf      = Gf()
+        noise = ig.RandomVariable(dist = 'uniform')
+        noise.uniformLowHigh(-200, 200)
+        sGT     = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
+        xTrue.append(sGT.measuredStateArray)
+        sGTwn   = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
+        yMeasured.append(sGTwn.realizationArray)
+
+    yMeasured   = array(yMeasured)
+    yMeasured   = transpose(yMeasured)
+    xTrue       = array(xTrue)
+    xTrue       = transpose(xTrue)
 
 ########################
 ### KALMAN FILTERING ###
@@ -168,8 +164,8 @@ def H(x):
 x0 = array(model["filter_parameters"]["initial_x"])
 P0 = array(model["filter_parameters"]["initial_p"])
 #Fk = np.eye(4)
-Fk = array([[0.5, 0 , 0.5, 0],[0, 0.5, 0, 0.5],[0.5, 0 , 0.5, 0],[0, 0.5, 0, 0.5]])                                          #transition matrix
-R = np.ones(4)*approxErr.var
+Fk = array(model["filter_parameters"]["transition_matrix"])        #transition matrix
+R = np.eye(12)*approxErr.var.__round__(2)
 Q = array(model["filter_parameters"]["process_covariance"])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
@@ -180,8 +176,8 @@ Filter.H = H
 Filtered    = kalman.Result(Filter, yMeasured)
 xEstimated  = array(Filtered.x)
 yEstimated  = h(xEstimated) - approxErr.mean
-covarianceEigenvalues, v = np.linalg.eig(array(Filtered.P))
-covarianceEigenvalues = np.real(covarianceEigenvalues)
+#covarianceEigenvalues, v = np.linalg.eig(array(Filtered.P))
+#covarianceEigenvalues = np.real(covarianceEigenvalues)
 
 
 ################
@@ -221,6 +217,7 @@ for i in range(4):
     #plt.savefig("./images/torax_R" + str(i) + ".png", dpi=96)
 
 plt.show()
+print("Program finished.")
 
 #P = array(Filtered.P)
 
