@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import kalman
 import json
+from matplotlib.animation import FuncAnimation, FFMpegWriter
 from numpy import array, transpose
 from subprocess import check_output
 
@@ -36,33 +37,44 @@ def draw_ellipse(ellipse):
     ax.plot(a*np.cos(t), b*np.sin(t), 'g--')
     ax.set_xlim(-160, 160)
     ax.set_ylim(-160, 160)
-
-    #plt.show()
+    
+    plt.show()
+    
 
 def ellipse_animation(ellipses):
 
-    from matplotlib.animation import FuncAnimation
 
     t = np.linspace(0, 2*np.pi, 100)
     fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
     ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
-    eRound, = ax.plot([], [], lw=2)
-    ePoints, = ax.scatter([], [])
 
-    def init():
-        eRound.set_data([], [])
-        ePoints.set_data([], [])
-        return eRound, ePoints
+    coordinates = array(ellipses[0]['coordinates'])
+    x = coordinates[:,0]
+    y = coordinates[:,1]
+    scat = ax.scatter([],[], s=100)
+    scat.set_color('white')
+    scat.set_edgecolor('red')
+    
 
-    def animate(i):
+    line = ax.plot([], [], lw=2)[0]
+    line.set_data([], [])
+    line.set_color('blue')
+    line.set_linestyle('-')
+
+    def update(i, fig, line, scat):
+        
         a, b = ellipses[i]['semiaxis']
         x, y = [a*np.cos(t), b*np.sin(t)]
-        eRound.set_data(x, y)
-        ePoints.set_data(*zip(*ellipse['coordinates']))
-        return eRound, ePoints
+        line.set_data(x, y)
 
-    anim = FuncAnimation(fig, animate, init_func=init,
-                               frames=20, interval=200, blit=True)
+        coord = array(ellipses[i]['coordinates'])
+        scat.set_offsets(coord)
+        
+        #print('Frames: %d' %i)
+        return line, scat,
+
+    anim = FuncAnimation(fig, update, fargs = (fig, line, scat), frames=20, interval=50, blit=True)
     plt.show()
 
 
@@ -71,7 +83,7 @@ def ellipse_animation(ellipses):
 data = json.load(open("ellipses.json","r"))
 ellipse_animation(data)
 draw_ellipse(data[0])
-draw_ellipse(data[-1])
+#draw_ellipse(data[-1])
 
 ### Function Models - Storage Retrieval
 
