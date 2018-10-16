@@ -85,8 +85,8 @@ class Result(ExtendedKalmanFilter):
 
         def __init__(self, kalmanFilter, observer):
                 result = kalmanFilter.filterSampleArray(observer)
-                self.x = result[0]
-                self.P = result[1]
+                self.x = array(result[0])
+                self.P = array(result[1])
                 pass
 
         def __call__(self):

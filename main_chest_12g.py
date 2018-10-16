@@ -74,7 +74,8 @@ def ellipse_animation(ellipses):
 
 
 # Modeling
-data = json.load(open("ellipses.json","r"))
+trueData = json.load(open("ellipses.json","r"))
+n_objects = trueData.__len__()
 #ellipse_animation(data)
 #draw_ellipse(data[0])
 #draw_ellipse(data[-1])
@@ -88,12 +89,6 @@ for model in models:
     if model["id"] == model_required:
         break
 
-
-# class EllipseModel(object):
-
-#     def __init__(self, nGauges):
-#         self.nGauges = nGauges
-
 ### Computational Parameters
 
 n = 100
@@ -101,15 +96,16 @@ t = array(range(1,n+1))
 def y(t, const): return np.full(t.shape, const)
 
 
+data = []
 
+for i in range(0, n_objects):
 
-for i in range(0, data.__len__()):
     yMeasured = []
     xTrue = []
-    for j in range(0, data[0]['radius_of_curvature'].__len__()):
+    for j in range(0, trueData[0]['radius_of_curvature'].__len__()):
         
         rho = ig.RandomVariable()  
-        rho.distributionArray = y(t, data[0]['radius_of_curvature'][j])
+        rho.distributionArray = y(t, trueData[0]['radius_of_curvature'][j])
         
         Rzero = 9000
         c = 1.7
@@ -132,6 +128,8 @@ for i in range(0, data.__len__()):
     yMeasured   = transpose(yMeasured)
     xTrue       = array(xTrue)
     xTrue       = transpose(xTrue)
+    data.append({'xTrue' : xTrue, 'yMeasured' : yMeasured})
+
 
 ########################
 ### KALMAN FILTERING ###
@@ -173,12 +171,17 @@ Filter.f = f
 Filter.h = h
 Filter.H = H
 
-Filtered    = kalman.Result(Filter, yMeasured)
-xEstimated  = array(Filtered.x)
-yEstimated  = h(xEstimated) - approxErr.mean
+for i in range(0, n_objects):
+    Filtered    = kalman.Result(Filter, data[i]['yMeasured'])
+    data[i]['xEstimated']  = Filtered.x
+    data[i]['yEstimated']  = h(Filtered.x) - approxErr.mean
+    cov = np.zeros(n)
+    for j in range(0 , n):
+        cov[j] = Filtered.P[j].trace()
+    data[i]['Trace Covariance'] = cov
+
 #covarianceEigenvalues, v = np.linalg.eig(array(Filtered.P))
 #covarianceEigenvalues = np.real(covarianceEigenvalues)
-
 
 ################
 ### PLOTTING ###
@@ -188,21 +191,21 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 #plt.tight_layout()
 
-for i in range(4):
+for i in range(0,1):
 
     plt.figure(i+1, figsize = (10,6))
     plt.subplot(211)
-    plt.plot(yMeasured[:,i], label = 'Measurement: R' + str(i))
-    plt.plot(yEstimated[:,i], label = 'Estimation: R' + str(i))
+    plt.plot(data[i]['yMeasured'], label = 'Measurement: R' + str(i))
+    plt.plot(data[i]['yEstimated'], label = 'Estimation: R' + str(i))
     #plt.ylim(yMeasured.min()*0.95, yMeasured.max()*1.05)
     plt.ylabel('Resistance (' + r'$\Omega$' + ')')
     plt.title('Strain Gauge Resistance')
     plt.legend()
 
     plt.subplot(212)
-    plt.plot(xEstimated[:,i],'g-', label = 'Estimation: R' + str(i))
-    plt.plot(xTrue[:,i], label = 'True: ' + r'$\rho$' + str(i))
-    plt.ylim(0, xTrue.max()*1.5)
+    plt.plot(data[i]['xEstimated'],'g-', label = 'Estimation: R' + str(i))
+    plt.plot(data[i]['xTrue'], label = 'True: ' + r'$\rho$' + str(i))
+    plt.ylim(0, data[i]['xTrue'].max()*1.5)
     plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
     plt.title('Radius of Curvature')
     plt.legend()
