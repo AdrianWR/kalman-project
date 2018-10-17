@@ -3,6 +3,7 @@
 
 import numpy as np
 from numpy import dot, eye, array
+from numpy.linalg import inv
 
 ### DEFINIÇÕES RELEVANTES
 # As variáveis inseridas na inicialização da classe
@@ -39,22 +40,24 @@ class ExtendedKalmanFilter(object):
                 Q = self.Q
 
                 self.x = self.f(x)
-                self.P = Fk*P*Fk.T + Q
+                self.P = dot(dot(Fk,P),Fk.T) + Q
 
 
         def update(self, z):
+                
+                I = eye(len(self.x))
 
                 x = self.x
                 P = self.P
                 R = self.R
-                H = self.H(x)
+                H = self.H(x)*I
                 y = z - self.h(x)
 
-                I = np.array([1.0])
-                K = P*H.T
-                K = K/(H*P*H.T+R)
-                self.x = x + K*y
-                self.P = (I-K*H)*P
+                K = dot(P, H.T)
+                #K = K/(dot(dot(H,P),H.T)+R)
+                K = K*inv(((H @ P) @ H.T) + R)
+                self.x = x + dot(K,y)
+                self.P = dot(I-dot(K,H),P)
                 # Joseph Form
                 #self.P = (I-self.K*HK(x))*P*(I-self.K*HK(x)).T + P*self.Q*P.T
                 #self.P = (self.P+self.P.T)/2
@@ -64,13 +67,27 @@ class ExtendedKalmanFilter(object):
 
                 self.propagate()
                 self.update(z)
-                return self.x
+                return [self.x, self.P]
 
         def filterSampleArray(self, observer):
 
                 n = len(observer)
-                signal = []
+                x = []
+                P = []
                 for i in range(0,n):
-                        x = self.filterSample(observer[i])
-                        signal.append(x[0])
-                return np.array(signal)
+                        result = self.filterSample(observer[i])
+                        x.append(array(result[0]))
+                        P.append(array(result[1]))
+                return [x, P]
+
+                
+class Result(ExtendedKalmanFilter):
+
+        def __init__(self, kalmanFilter, observer):
+                result = kalmanFilter.filterSampleArray(observer)
+                self.x = array(result[0])
+                self.P = array(result[1])
+                pass
+
+        def __call__(self):
+                return self.x
