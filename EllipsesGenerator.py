@@ -84,7 +84,7 @@ def ellipse_points2(ellipse, n = 12):
     return points
 
 # Iterations Information
-n = 20
+n = 50
 nGauges = 12
 a = np.zeros(n)
 b = linspace(b,1.2*b,n)

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import kalman
 import json
-from matplotlib.animation import FuncAnimation, FFMpegWriter
+from matplotlib.animation import FuncAnimation, writers
 from numpy import array, transpose
 from subprocess import check_output
 
@@ -48,7 +48,6 @@ def ellipse_animation(ellipses):
     ax = fig.add_subplot(1,1,1)
     ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
 
-    #coordinates = array(ellipses[0]['coordinates'])
     scat = ax.scatter([],[], s=100)
     scat.set_color('white')
     scat.set_edgecolor('red')
@@ -70,64 +69,48 @@ def ellipse_animation(ellipses):
         return line, scat,
 
     anim = FuncAnimation(fig, update, fargs = (fig, line, scat), frames=20, interval=50, blit=True)
-    plt.show()
+    anim.save('ellipse_animation.mp4', writer='magick')
+    #plt.show()
 
 
 # Modeling
 trueData = json.load(open("ellipses.json","r"))
-n_objects = trueData.__len__()
-#ellipse_animation(data)
-#draw_ellipse(data[0])
-#draw_ellipse(data[-1])
+nSamples = trueData.__len__()
+nGauges = trueData[0]['radius_of_curvature'].__len__()
+#ellipse_animation(trueData)
+
 
 ### Function Models - Storage Retrieval
 
-# CHANGE HERE!!!
 model_required = 5
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
         break
 
-### Computational Parameters
-
-n = 100
-t = array(range(1,n+1))
-def y(t, const): return np.full(t.shape, const)
-
-
 data = []
-
-for i in range(0, n_objects):
-
-    yMeasured = []
-    xTrue = []
-    for j in range(0, trueData[0]['radius_of_curvature'].__len__()):
+for i in range(0, nSamples):
         
-        rho = ig.RandomVariable()  
-        rho.distributionArray = y(t, trueData[0]['radius_of_curvature'][j])
-        
-        Rzero = 9000
-        c = 1.7
-        Gf = 8
+    rho = ig.RandomVariable()  
+    rho.distributionArray = array(trueData[i]['radius_of_curvature'])    
+    
+    Rzero = 9000
+    c = 1.7
+    Gf = 8
 
-        Rzero   = ig.RandomVariable(Rzero, 100, 'gaussian')
-        Rzero   = Rzero()
-        c       = ig.RandomVariable(c, 0.1, 'gaussian')
-        c       = c()
-        Gf      = ig.RandomVariable(Gf, 0.4, 'gaussian')
-        Gf      = Gf()
-        noise = ig.RandomVariable(dist = 'uniform')
-        noise.uniformLowHigh(-200, 200)
-        sGT     = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
-        xTrue.append(sGT.measuredStateArray)
-        sGTwn   = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
-        yMeasured.append(sGTwn.realizationArray)
+    Rzero   = ig.RandomVariable(Rzero, 100, 'gaussian')
+    Rzero   = Rzero()
+    c       = ig.RandomVariable(c, 0.1, 'gaussian')
+    c       = c()
+    Gf      = ig.RandomVariable(Gf, 0.4, 'gaussian')
+    Gf      = Gf()
+    noise = ig.RandomVariable(dist = 'uniform')
+    noise.uniformLowHigh(-200, 200)
+    sGT     = ig.StrainGauge(Rzero, c, rho, Gf, err = 0)
+    xTrue = sGT.measuredStateArray
+    sGTwn   = ig.StrainGauge(Rzero, c, rho, Gf, err = noise)
+    yMeasured = sGTwn.realizationArray
 
-    yMeasured   = array(yMeasured)
-    yMeasured   = transpose(yMeasured)
-    xTrue       = array(xTrue)
-    xTrue       = transpose(xTrue)
     data.append({'xTrue' : xTrue, 'yMeasured' : yMeasured})
 
 
@@ -161,8 +144,7 @@ def H(x):
 ### Filter Parameters
 x0 = array(model["filter_parameters"]["initial_x"])
 P0 = array(model["filter_parameters"]["initial_p"])
-#Fk = np.eye(4)
-Fk = array(model["filter_parameters"]["transition_matrix"])        #transition matrix
+Fk = array(model["filter_parameters"]["transition_matrix"])
 R = np.eye(12)*approxErr.var.__round__(2)
 Q = array(model["filter_parameters"]["process_covariance"])
 
@@ -171,17 +153,14 @@ Filter.f = f
 Filter.h = h
 Filter.H = H
 
-for i in range(0, n_objects):
-    Filtered    = kalman.Result(Filter, data[i]['yMeasured'])
-    data[i]['xEstimated']  = Filtered.x
-    data[i]['yEstimated']  = h(Filtered.x) - approxErr.mean
-    cov = np.zeros(n)
-    for j in range(0 , n):
-        cov[j] = Filtered.P[j].trace()
-    data[i]['Trace Covariance'] = cov
+Filtered    = kalman.Result(Filter, [k['yMeasured'] for k in data])
+for i in range(0, nSamples):
+    data[i]['xEstimated'] = xMeasured = Filtered.x[i]
+    data[i]['yEstimated']  = h(Filtered.x[i]) - approxErr.mean
 
-#covarianceEigenvalues, v = np.linalg.eig(array(Filtered.P))
-#covarianceEigenvalues = np.real(covarianceEigenvalues)
+xEstimated  = array(Filtered.x)
+yEstimated  = h(xEstimated) - approxErr.mean
+covariance_trace = [k.trace() for k in Filtered.P]
 
 ################
 ### PLOTTING ###
@@ -189,38 +168,33 @@ for i in range(0, n_objects):
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
-#plt.tight_layout()
 
-for i in range(0,1):
+plt.figure(0)
+plt.subplot(111)
+plt.plot(covariance_trace, label = 'Trace', c = 'g')
+plt.title('Trace of Covariance Matrix')
+plt.savefig("./images/TwelveGauges/torax_expanding_covariance_trace.png", dpi=96)
+
+for i in range(0, nGauges):
 
     plt.figure(i+1, figsize = (10,6))
     plt.subplot(211)
-    plt.plot(data[i]['yMeasured'], label = 'Measurement: R' + str(i))
-    plt.plot(data[i]['yEstimated'], label = 'Estimation: R' + str(i))
-    #plt.ylim(yMeasured.min()*0.95, yMeasured.max()*1.05)
+    plt.plot(array([k['yMeasured'] for k in data])[:,i], label = 'Measurement: R' + str(i))
+    plt.plot(array([k['yEstimated'] for k in data])[:,i], label = 'Estimation: R' + str(i))
     plt.ylabel('Resistance (' + r'$\Omega$' + ')')
     plt.title('Strain Gauge Resistance')
     plt.legend()
 
     plt.subplot(212)
-    plt.plot(data[i]['xEstimated'],'g-', label = 'Estimation: R' + str(i))
-    plt.plot(data[i]['xTrue'], label = 'True: ' + r'$\rho$' + str(i))
+    plt.plot(array([k['xEstimated'] for k in data])[:,i],'g-', label = 'Estimation: R' + str(i))
+    plt.plot(array([k['xTrue'] for k in data])[:,i], label = 'True: ' + r'$\rho$' + str(i))
     plt.ylim(0, data[i]['xTrue'].max()*1.5)
     plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
     plt.title('Radius of Curvature')
     plt.legend()
     
-    # plt.figure(0)
-    # plt.plot(covarianceEigenvalues[:,i], label = 'Error Covariance '+ r'$\rho$' + str(i))
-    # plt.yscale('log')
-    # plt.title('Error Covariance')
-    # plt.legend()
+    plt.savefig("./images/TwelveGauges/torax_expanding_" + str(i) + ".png", dpi=96)
 
-
-    #plt.savefig("./images/torax_R" + str(i) + ".png", dpi=96)
-
-plt.show()
 print("Program finished.")
 
-#P = array(Filtered.P)
 
