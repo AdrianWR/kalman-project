@@ -41,14 +41,14 @@ def draw_ellipse(ellipse):
     plt.show()
     
 
-def ellipse_animation(ellipses):
-
+def ellipse_animation(ellipses):  
+    
     t = np.linspace(0, 2*np.pi, 100)
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
     ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
 
-    scat = ax.scatter([],[], s=100)
+    scat = ax.scatter([], [], s=100)
     scat.set_color('white')
     scat.set_edgecolor('red')
 
@@ -57,7 +57,13 @@ def ellipse_animation(ellipses):
     line.set_color('blue')
     line.set_linestyle('-')
 
-    def update(i, fig, line, scat):
+    arrows = ax.quiver([] , [], angles='xy', scale_units='xy', scale=1)
+    arrows.set_color('orange')
+    arrows.set_label('True Radius of Curvature')
+
+    ax.legend()
+
+    def update(i, fig, line, scat, arrows):
         
         a, b = ellipses[i]['semiaxis']
         x, y = [a*np.cos(t), b*np.sin(t)]
@@ -65,19 +71,79 @@ def ellipse_animation(ellipses):
 
         coord = array(ellipses[i]['coordinates'])
         scat.set_offsets(coord)
-        
-        return line, scat,
 
-    anim = FuncAnimation(fig, update, fargs = (fig, line, scat), frames=20, interval=50, blit=True)
-    anim.save('ellipse_animation.mp4', writer='magick')
-    #plt.show()
+        x, y = np.transpose(np.array(ellipses[i]['coordinates']))
+        theta = np.arctan2(y,x)
+        rho = np.array(ellipses[i]['radius_of_curvature'])
+        u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
+        arrows.set_offsets(coord)
+        arrows.set_UVC(u, v)
+
+        return line, scat, arrows,
+
+    anim = FuncAnimation(fig, update, fargs = (fig, line, scat, arrows), frames=20, interval=50, blit=True)
+    #anim.save('ellipse_animation.mp4', writer='magick')   
+    plt.show()
+
+
+# def ellipse_animation2(ellipses, radius_filtered):  
+    
+#     t = np.linspace(0, 2*np.pi, 100)
+#     fig = plt.figure()
+#     ax = fig.add_subplot(1,1,1)
+#     ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
+
+#     scat = ax.scatter([],[], s=100)
+#     scat.set_color('white')
+#     scat.set_edgecolor('red')
+
+#     line = ax.plot([], [], lw=2)[0]
+#     line.set_data([], [])
+#     line.set_color('blue')
+#     line.set_linestyle('-')
+
+#     arrows = ax.quiver([], [])
+#     arrows.set_color('orange')
+#     arrows.set_label('True Radius of Curvature')
+
+#     filteredArrows = ax.quiver([], [])
+#     filteredArrows.set_color('magenta')
+#     filteredArrows.set_label('Filtered Radius of Curvature')
+
+#     ax.legend()
+
+#     def update(i, fig, line, scat, arrows, filteredArrows):
+        
+#         a, b = ellipses[i]['semiaxis']
+#         x, y = [a*np.cos(t), b*np.sin(t)]
+#         line.set_data(x, y)
+
+#         coord = array(ellipses[i]['coordinates'])
+#         scat.set_offsets(coord)
+
+#         x, y = np.transpose(np.array(ellipses[i]['coordinates']))
+#         theta = np.arctan2(y,x)
+#         rho = np.array(ellipses[i]['radius_of_curvature'])
+#         u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
+#         arrows.set_offsets(coord)
+#         arrows.set_UVC(u, v)
+
+#         filteredArrows.set_offsets(coord)
+#         u,v = [radius_filtered[i]*np.cos(theta)*-1, radius_filtered[i]*np.sin(theta)*-1]
+#         filteredArrows.set_UVC(u, v)
+
+#         return line, scat, arrows, filteredArrows,
+
+#     anim = FuncAnimation(fig, update, fargs = (fig, line, scat, arrows, filteredArrows), frames=20, interval=50, blit=True)
+#     #anim.save('ellipse_animation.mp4', writer='magick')    
+#     plt.show()
 
 
 # Modeling
 trueData = json.load(open("ellipses.json","r"))
 nSamples = trueData.__len__()
 nGauges = trueData[0]['radius_of_curvature'].__len__()
-#ellipse_animation(trueData)
+ellipse_animation(trueData)
 
 
 ### Function Models - Storage Retrieval
@@ -161,6 +227,9 @@ for i in range(0, nSamples):
 xEstimated  = array(Filtered.x)
 yEstimated  = h(xEstimated) - approxErr.mean
 covariance_trace = [k.trace() for k in Filtered.P]
+
+
+ellipse_animation2(trueData, xEstimated)
 
 ################
 ### PLOTTING ###

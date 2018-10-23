@@ -8,9 +8,7 @@ def draw_ellipse(ellipse):
     x,y = np.transpose(np.array(ellipse['coordinates']))
     theta = np.arctan2(y,x)
     rho = ellipse['radius_of_curvature']
-    u,v = [,]
-    # u,v = [rho*sin(theta), rho*cos(theta)]
-
+    u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
     t = np.linspace(0, 2*np.pi, 100)
 
     fig = plt.figure()
@@ -20,11 +18,9 @@ def draw_ellipse(ellipse):
     ax.set_xlim(-160, 160)
     ax.set_ylim(-160, 160)
     
-    
-
-    plt.quiver()
-
+    plt.quiver(x, y, u, v, color = '#ffbb00')
     plt.show()
+    print("Plot Completed")
 
 data = json.load(open('ellipses.json','r'))
 rc = np.array(data[0]['radius_of_curvature'])
