@@ -28,62 +28,71 @@ approxErr.simulateApproximationError(4000, re_simulate = False)
 
 def draw_ellipse(ellipse):
     
-    a, b = ellipse['semiaxis']
-    t = np.linspace(0, 2*np.pi, 100)
+        a, b = ellipse['semiaxis']
+        t = np.linspace(0, 2*np.pi, 100)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    ax.scatter(*zip(*ellipse['coordinates']))
-    ax.plot(a*np.cos(t), b*np.sin(t), 'g--')
-    ax.set_xlim(-160, 160)
-    ax.set_ylim(-160, 160)
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.scatter(*zip(*ellipse['coordinates']))
+        ax.plot(a*np.cos(t), b*np.sin(t), 'g--')
+        ax.set_xlim(-160, 160)
+        ax.set_ylim(-160, 160)
     
-    plt.show()
+        plt.show()
     
 
 def ellipse_animation(ellipses):  
     
-    t = np.linspace(0, 2*np.pi, 100)
-    fig = plt.figure()
-    ax = fig.add_subplot(1,1,1)
-    ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.set(xlim=(-160, 160), ylim=(-160, 160))
 
-    scat = ax.scatter([], [], s=100)
-    scat.set_color('white')
-    scat.set_edgecolor('red')
-
-    line = ax.plot([], [], lw=2)[0]
-    line.set_data([], [])
-    line.set_color('blue')
-    line.set_linestyle('-')
-
-    arrows = ax.quiver([] , [], angles='xy', scale_units='xy', scale=1)
-    arrows.set_color('orange')
-    arrows.set_label('True Radius of Curvature')
-
-    ax.legend()
-
-    def update(i, fig, line, scat, arrows):
-        
-        a, b = ellipses[i]['semiaxis']
+        t = np.linspace(0, 2*np.pi, 100)
+        a, b = ellipses[0]['semiaxis']
         x, y = [a*np.cos(t), b*np.sin(t)]
-        line.set_data(x, y)
+        line = ax.plot(x, y, lw=2)[0]
+        line.set_color('blue')
+        line.set_linestyle('-')
 
-        coord = array(ellipses[i]['coordinates'])
-        scat.set_offsets(coord)
-
-        x, y = np.transpose(np.array(ellipses[i]['coordinates']))
+        x,y = transpose(array(ellipses[0]['coordinates']))
+        scat = ax.scatter(x, y, s=100)
+        scat.set_color('white')
+        scat.set_edgecolor('red')
+        
         theta = np.arctan2(y,x)
-        rho = np.array(ellipses[i]['radius_of_curvature'])
+        rho = array(ellipses[0]['radius_of_curvature'])
         u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
-        arrows.set_offsets(coord)
-        arrows.set_UVC(u, v)
+        u,v = [np.round(u,2) + 0, np.round(v,2) + 0]
+        arrows = ax.quiver(x, y, u, v)
+        arrows.set_color('orange')
+        arrows.set_label('True Radius of Curvature')
+        ax.legend()
+        
+        
+        def update(i, fig, line, scat, arrows):
+        
+        
+                a, b = ellipses[i]['semiaxis']
+                x, y = [a*np.cos(t), b*np.sin(t)]
+                line.set_data(x, y)
 
-        return line, scat, arrows,
+                coord = array(ellipses[i]['coordinates'])
+                scat.set_offsets(coord)
 
-    anim = FuncAnimation(fig, update, fargs = (fig, line, scat, arrows), frames=20, interval=50, blit=True)
-    #anim.save('ellipse_animation.mp4', writer='magick')   
-    plt.show()
+                x, y = transpose(array(ellipses[i]['coordinates']))
+                theta = np.arctan2(y,x)
+                rho = array(ellipses[i]['radius_of_curvature'])
+                u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
+                u,v = [np.round(u,2) + 0, np.round(v,2) + 0]
+                arrows.set_offsets(coord)
+                arrows.set_UVC(u, v)
+
+                return line, scat, arrows,
+
+        anim = FuncAnimation(fig, update, fargs = (fig, line, scat, arrows), frames=len(ellipses)-1, interval=50, blit=True)
+        plt.draw()
+        #plt.show()
+        anim.save('ellipse_test.mp4', writer = 'ffmpeg')   
+    
 
 
 # def ellipse_animation2(ellipses, radius_filtered):  
