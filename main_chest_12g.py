@@ -41,7 +41,7 @@ def draw_ellipse(ellipse):
         plt.show()
     
 
-def ellipse_animation(ellipses):  
+def ellipse_animation(ellipses, filtered_radius, path = None):
     
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlim=(-160, 160), ylim=(-160, 160))
@@ -65,11 +65,15 @@ def ellipse_animation(ellipses):
         arrows = ax.quiver(x, y, u, v)
         arrows.set_color('orange')
         arrows.set_label('True Radius of Curvature')
-        ax.legend()
         
-        
-        def update(i, fig, line, scat, arrows):
-        
+        u,v = [filtered_radius[0]*np.cos(theta)*-1, filtered_radius[0]*np.sin(theta)*-1]
+        u,v = [np.round(u,2) + 0, np.round(v,2) + 0]
+        arrows2 = ax.quiver(x, y, u, v, width = 0.005)
+        arrows2.set_color('cyan')
+        arrows2.set_label('Filtered Radius of Curvature')
+        ax.legend(loc = 1)
+
+        def update(i, fig, line, scat, arrows, arrows2):
         
                 a, b = ellipses[i]['semiaxis']
                 x, y = [a*np.cos(t), b*np.sin(t)]
@@ -86,13 +90,21 @@ def ellipse_animation(ellipses):
                 arrows.set_offsets(coord)
                 arrows.set_UVC(u, v)
 
-                return line, scat, arrows,
 
-        anim = FuncAnimation(fig, update, fargs = (fig, line, scat, arrows), frames=len(ellipses)-1, interval=50, blit=True)
-        plt.draw()
-        #plt.show()
-        anim.save('ellipse_test.mp4', writer = 'ffmpeg')   
-    
+                rho = filtered_radius[i]
+                u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
+                u,v = [np.round(u,2) + 0, np.round(v,2) + 0]
+                arrows2.set_offsets(coord)
+                arrows2.set_UVC(u, v)
+
+                return line, scat, arrows, arrows2,
+
+        anim = FuncAnimation(fig, update, fargs = (fig, line, scat, arrows, arrows2), frames=len(ellipses)-1, interval=50, blit=True)
+        if path:
+                anim.save(path + 'ellipse_animation.mp4', writer = 'ffmpeg')
+        else:
+                plt.draw()
+                plt.show()
 
 
 # def ellipse_animation2(ellipses, radius_filtered):  
@@ -152,12 +164,12 @@ def ellipse_animation(ellipses):
 trueData = json.load(open("ellipses.json","r"))
 nSamples = trueData.__len__()
 nGauges = trueData[0]['radius_of_curvature'].__len__()
-ellipse_animation(trueData)
+#ellipse_animation(trueData)
 
 
 ### Function Models - Storage Retrieval
 
-model_required = 5
+model_required = 6
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -237,12 +249,12 @@ xEstimated  = array(Filtered.x)
 yEstimated  = h(xEstimated) - approxErr.mean
 covariance_trace = [k.trace() for k in Filtered.P]
 
-
-ellipse_animation2(trueData, xEstimated)
-
 ################
 ### PLOTTING ###
 ################
+
+imgDirectory = './media/' + model['name'] + '/'
+ellipse_animation(trueData, xEstimated, imgDirectory)
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -251,7 +263,7 @@ plt.figure(0)
 plt.subplot(111)
 plt.plot(covariance_trace, label = 'Trace', c = 'g')
 plt.title('Trace of Covariance Matrix')
-plt.savefig("./images/TwelveGauges/torax_expanding_covariance_trace.png", dpi=96)
+plt.savefig(imgDirectory + "torax_expanding_covariance_trace.png", dpi=96)
 
 for i in range(0, nGauges):
 
@@ -271,7 +283,7 @@ for i in range(0, nGauges):
     plt.title('Radius of Curvature')
     plt.legend()
     
-    plt.savefig("./images/TwelveGauges/torax_expanding_" + str(i) + ".png", dpi=96)
+    plt.savefig(imgDirectory + "torax_expanding_" + str(i) + ".png", dpi=96)
 
 print("Program finished.")
 
