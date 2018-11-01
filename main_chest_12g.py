@@ -90,7 +90,6 @@ def ellipse_animation(ellipses, filtered_radius, path = None):
                 arrows.set_offsets(coord)
                 arrows.set_UVC(u, v)
 
-
                 rho = filtered_radius[i]
                 u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
                 u,v = [np.round(u,2) + 0, np.round(v,2) + 0]
