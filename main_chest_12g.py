@@ -248,6 +248,28 @@ xEstimated  = array(Filtered.x)
 yEstimated  = h(xEstimated) - approxErr.mean
 covariance_trace = [k.trace() for k in Filtered.P]
 
+###################
+### ODR Fitting ###
+###################
+
+import scipy.odr
+
+x = np.linspace(0, 2*np.pi, nGauges)
+y = xEstimated[0]
+sx = np.ones(nGauges)*0.28
+sy = Filtered.P[0].diagonal()
+
+def curvature(B, x):
+        a = B[0]
+        b = B[1]
+        return ((a*b)**-2)*(((np.cos(x)/a)**2+(np.sin(x)/b)**2)**(-1.5))
+
+fitModel = scipy.odr.Model(curvature)
+data = scipy.odr.RealData(x, y, sx = sx, sy = sy)
+odr = scipy.odr.ODR(data, fitModel, beta0 = [100, 100])
+out = odr.run()
+
+
 ################
 ### PLOTTING ###
 ################
