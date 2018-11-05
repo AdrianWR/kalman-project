@@ -231,7 +231,7 @@ def H(x):
 x0 = array(model["filter_parameters"]["initial_x"])
 P0 = array(model["filter_parameters"]["initial_p"])
 Fk = array(model["filter_parameters"]["transition_matrix"])
-R = np.eye(12)*approxErr.var.__round__(2)
+R = np.eye(12)*approxErr.var
 Q = array(model["filter_parameters"]["process_covariance"])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)
@@ -254,21 +254,26 @@ covariance_trace = [k.trace() for k in Filtered.P]
 
 import scipy.odr
 
-x = np.linspace(0, 2*np.pi, nGauges)
-y = xEstimated[0]
-sx = np.ones(nGauges)*0.28
-sy = Filtered.P[0].diagonal()
-
-def curvature(B, x):
+def Rcurvature(B, x):
         a = B[0]
         b = B[1]
-        return ((a*b)**-2)*(((np.cos(x)/a)**2+(np.sin(x)/b)**2)**(-1.5))
+        Rc = ((a*np.sin(x))**2+(b*np.cos(x))**2)**(3/2)
+        Rc = Rc/(a*b)
+        return Rc
 
-fitModel = scipy.odr.Model(curvature)
-data = scipy.odr.RealData(x, y, sx = sx, sy = sy)
-odr = scipy.odr.ODR(data, fitModel, beta0 = [100, 100])
-out = odr.run()
+fitModel = scipy.odr.Model(Rcurvature)
 
+x = np.linspace(0, 2*np.pi, nGauges)
+sx = np.ones(nGauges)*0.28
+
+fitted_parameters = np.zeros([nSamples,2])
+for i in range(nSamples):
+        y = xEstimated[i]
+        sy = Filtered.P[i].diagonal()
+        data = scipy.odr.RealData(x, y, sx = sx, sy = sy)
+        odr = scipy.odr.ODR(data, fitModel, beta0 = [144, 126])
+        out = odr.run()
+        fitted_parameters[i] = out.beta
 
 ################
 ### PLOTTING ###
@@ -307,5 +312,3 @@ for i in range(0, nGauges):
     plt.savefig(imgDirectory + "torax_expanding_" + str(i) + ".png", dpi=96)
 
 print("Program finished.")
-
-
