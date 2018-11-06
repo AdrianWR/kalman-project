@@ -44,7 +44,11 @@ def ellipse_points(ellipse, n = 12):
     c = 0
     dtheta = 0
     C = ellipse.circumference.evalf()
+<<<<<<< HEAD
     e = ellipse.eccentricity.evalf()
+=======
+    e = ellipse.eccentricity.evalf()
+>>>>>>> 76efc06243c0a6d35a4d95e5e79f20141d56c699
     a = ellipse.hradius
     b = ellipse.vradius
 
@@ -94,7 +98,7 @@ b = linspace(b,1.2*b,n)
 ellipses = []
 for i in range(n):
     e = Ellipse(Point(0, 0), hradius = x2.evalf(subs={y:b[i]}), vradius = b[i])
-    ePoints = ellipse_points2(e, nGauges)
+    ePoints = ellipse_points(e, nGauges)
     data = {
         "coordinates": ePoints,
         "radius_of_curvature": radius_of_curvature(e, ePoints),
