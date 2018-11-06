@@ -35,6 +35,7 @@ def radius_of_curvature(ellipse, points):
     for i in range(len(points)):
         x, y = points[i]
         rho = ((a*b)**2)*(((x**2/a**4)+(y**2/b**4))**(3/2))
+        rho = round(rho, 6)
         rho_ellipse.append(rho)
     return rho_ellipse
 
@@ -44,7 +45,7 @@ def ellipse_points(ellipse, n = 12):
     c = 0
     dtheta = 0
     C = ellipse.circumference.evalf()
-    e = ellipse.eccentricity.evalf
+    e = ellipse.eccentricity.evalf()
     a = ellipse.hradius
     b = ellipse.vradius
 
@@ -56,10 +57,10 @@ def ellipse_points(ellipse, n = 12):
     k = 1
     while (k < n//4):
         while (c < k*C//n):
-            c = a*ellipeinc(dtheta, e**2)
+            c = a*ellipeinc(dtheta, round(e**2, 16))    # Not rounding causes TypeError at function
             dtheta += 0.01
-        x = a*np.cos(dtheta)
-        y = b*np.sin(dtheta)
+        x = round(a*np.cos(dtheta), 6)
+        y = round(b*np.sin(dtheta), 6)
         points[k]        = [+x,+y]
         points[k+n//4]   = [-x,+y]
         points[k+2*n//4] = [-x,-y]
@@ -70,8 +71,8 @@ def ellipse_points(ellipse, n = 12):
 ## Angle is maintened equal
 def ellipse_points2(ellipse, n = 12):
 
-    a = round(ellipse.hradius,2)
-    b = round(ellipse.vradius,2)
+    a = ellipse.hradius
+    b = ellipse.vradius
 
     points = [0]*n
     #i = 0
@@ -79,12 +80,12 @@ def ellipse_points2(ellipse, n = 12):
         angle = i*(2*pi/n)
         x = a*np.cos(angle)
         y = b*np.sin(angle)
-        points[i] = [x.__round__(2),y.__round__(2)]
+        points[i] = [x, y]
         #i += 1
     return points
 
 # Iterations Information
-n = 50
+n = 250
 nGauges = 12
 a = np.zeros(n)
 b = linspace(b,1.2*b,n)
@@ -98,7 +99,7 @@ for i in range(n):
     data = {
         "coordinates": ePoints,
         "radius_of_curvature": radius_of_curvature(e, ePoints),
-        "semiaxis": [e.hradius, e.vradius]
+        "semiaxis": [e.hradius.__round__(6), e.vradius.__round__(6)]
     }
     ellipses.append(data)
 json.dump(ellipses, open('ellipses.json', 'w'), indent=2)
