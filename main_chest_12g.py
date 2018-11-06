@@ -164,7 +164,7 @@ def ellipse_animation(ellipses, filtered_radius, path = None):
 trueData = json.load(open("ellipses.json","r"))
 nSamples = trueData.__len__()
 nGauges = trueData[0]['radius_of_curvature'].__len__()
-#ellipse_animation(trueData)
+#ellipse_animation(trueData, trueData[0]['radius_of_curvature'])
 
 
 ### Function Models - Storage Retrieval
@@ -232,7 +232,7 @@ def H(x):
 x0 = array(model["filter_parameters"]["initial_x"])
 P0 = array(model["filter_parameters"]["initial_p"])
 Fk = array(model["filter_parameters"]["transition_matrix"])
-R = np.eye(12)*approxErr.var.__round__(2)
+R = np.eye(12)*approxErr.var
 Q = array(model["filter_parameters"]["process_covariance"])
 
 Filter = kalman.ExtendedKalmanFilter(x0, P0, Fk, R, Q)

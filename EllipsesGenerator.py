@@ -29,13 +29,13 @@ x1, x2 = solve(P,x)
 
 
 def radius_of_curvature(ellipse, points):
-    a = round(ellipse.hradius,2)
-    b = round(ellipse.vradius,2)
+    a = ellipse.hradius
+    b = ellipse.vradius
     rho_ellipse = []
     for i in range(len(points)):
         x, y = points[i]
         rho = ((a*b)**2)*(((x**2/a**4)+(y**2/b**4))**(3/2))
-        rho_ellipse.append(rho.__round__(2))
+        rho_ellipse.append(rho)
     return rho_ellipse
 
 ## Distance between gauges is maintened equal
@@ -44,9 +44,9 @@ def ellipse_points(ellipse, n = 12):
     c = 0
     dtheta = 0
     C = ellipse.circumference.evalf()
-    e = round(ellipse.eccentricity.evalf(),3)
-    a = round(ellipse.hradius,2)
-    b = round(ellipse.vradius,2)
+    e = ellipse.eccentricity.evalf()
+    a = ellipse.hradius
+    b = ellipse.vradius
 
     points = [0]*n
     points[0]        = [a, 0]
@@ -58,8 +58,8 @@ def ellipse_points(ellipse, n = 12):
         while (c < k*C//n):
             c = a*ellipeinc(dtheta, e**2)
             dtheta += 0.01
-        x = round(a*np.cos(dtheta),2)
-        y = round(b*np.sin(dtheta),2)
+        x = a*np.cos(dtheta)
+        y = b*np.sin(dtheta)
         points[k]        = [+x,+y]
         points[k+n//4]   = [-x,+y]
         points[k+2*n//4] = [-x,-y]
@@ -70,8 +70,8 @@ def ellipse_points(ellipse, n = 12):
 ## Angle is maintened equal
 def ellipse_points2(ellipse, n = 12):
 
-    a = round(ellipse.hradius,2)
-    b = round(ellipse.vradius,2)
+    a = ellipse.hradius
+    b = ellipse.vradius
 
     points = [0]*n
     #i = 0
@@ -79,12 +79,12 @@ def ellipse_points2(ellipse, n = 12):
         angle = i*(2*pi/n)
         x = a*np.cos(angle)
         y = b*np.sin(angle)
-        points[i] = [x.__round__(2),y.__round__(2)]
+        points[i] = [x,y]
         #i += 1
     return points
 
 # Iterations Information
-n = 50
+n = 200
 nGauges = 12
 a = np.zeros(n)
 b = linspace(b,1.2*b,n)
@@ -98,7 +98,7 @@ for i in range(n):
     data = {
         "coordinates": ePoints,
         "radius_of_curvature": radius_of_curvature(e, ePoints),
-        "semiaxis": [e.hradius.__round__(2), e.vradius.__round__(2)]
+        "semiaxis": [e.hradius, e.vradius]
     }
     ellipses.append(data)
 json.dump(ellipses, open('ellipses.json', 'w'), indent=2)
