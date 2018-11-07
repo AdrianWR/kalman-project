@@ -50,17 +50,19 @@ def ellipse_points(ellipse, n = 12):
     b = ellipse.vradius
 
     points = [0]*n
-    points[0]        = [a, 0]
-    points[n//4]     = [0, b]
-    points[2*n//4]   = [-a,0]
-    points[3*n//4]   = [0,-b]
+    points[0]        = [a.__round__(6), 0]
+    points[n//4]     = [0, b.__round__(6)]
+    points[2*n//4]   = [-a.__round__(6),0]
+    points[3*n//4]   = [0,-b.__round__(6)]
     k = 1
     while (k < n//4):
         while (c < k*C//n):
             c = a*ellipeinc(dtheta, round(e**2, 16))    # Not rounding causes TypeError at function
             dtheta += 0.01
-        x = round(a*np.cos(dtheta), 6)
-        y = round(b*np.sin(dtheta), 6)
+        x = a*np.cos(dtheta)
+        y = b*np.sin(dtheta)
+        x = x.__round__(6)
+        y = y.__round__(6)
         points[k]        = [+x,+y]
         points[k+n//4]   = [-x,+y]
         points[k+2*n//4] = [-x,-y]
@@ -75,13 +77,13 @@ def ellipse_points2(ellipse, n = 12):
     b = ellipse.vradius
 
     points = [0]*n
-    #i = 0
     for i in range(0, n):
         angle = i*(2*pi/n)
         x = a*np.cos(angle)
         y = b*np.sin(angle)
+        x = x.__round__(6)
+        y = y.__round__(6)
         points[i] = [x, y]
-        #i += 1
     return points
 
 # Iterations Information
@@ -95,12 +97,13 @@ b = linspace(b,1.2*b,n)
 ellipses = []
 for i in range(n):
     e = Ellipse(Point(0, 0), hradius = x2.evalf(subs={y:b[i]}), vradius = b[i])
-    ePoints = ellipse_points(e, nGauges)
+    ePoints = ellipse_points2(e, nGauges)
     data = {
         "coordinates": ePoints,
         "radius_of_curvature": radius_of_curvature(e, ePoints),
         "semiaxis": [e.hradius.__round__(6), e.vradius.__round__(6)]
     }
     ellipses.append(data)
+    print('Ellipse number ' + str(i+1) + ' generated.')
 json.dump(ellipses, open('ellipses.json', 'w'), indent=2)
 print('Number of ellipses generated: '+ n.__str__() +'. Each one with '+ nGauges.__str__() +' strain gauges.')

@@ -270,8 +270,8 @@ fitted_parameters = np.zeros([nSamples,2])
 for i in range(nSamples):
         y = xEstimated[i]
         sy = Filtered.P[i].diagonal()
-        data = scipy.odr.RealData(x, y, sx = sx, sy = sy)
-        odr = scipy.odr.ODR(data, fitModel, beta0 = [144, 126])
+        realdata = scipy.odr.RealData(x, y, sx = sx, sy = sy)
+        odr = scipy.odr.ODR(realdata, fitModel, beta0 = [144, 126])
         out = odr.run()
         fitted_parameters[i] = out.beta
 
@@ -280,15 +280,19 @@ for i in range(nSamples):
 ################
 
 imgDirectory = './media/' + model['name'] + '/'
-ellipse_animation(trueData, xEstimated, imgDirectory)
+#ellipse_animation(trueData, xEstimated, imgDirectory)
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
-plt.figure(0)
-plt.subplot(111)
-plt.plot(covariance_trace, label = 'Trace', c = 'g')
+plt.figure(0, figsize = (10,6))
 plt.title('Trace of Covariance Matrix')
+ax0 = plt.subplot()
+ax0.plot(covariance_trace, label = 'Trace', c = 'g')
+ax0.set_xlabel('Time (s)')
+ax0.set_ylabel('Covariance Trace')
+ax0.set_yscale('log')
+ax0.set_yticks([10,100,1000])
 plt.savefig(imgDirectory + "torax_expanding_covariance_trace.png", dpi=96)
 
 for i in range(0, nGauges):
