@@ -45,15 +45,8 @@ def ellipse_points(ellipse, n = 12):
     c = 0
     dtheta = 0
     C = ellipse.circumference.evalf()
-<<<<<<< HEAD
     e = ellipse.eccentricity.evalf()
-=======
-<<<<<<< HEAD
-    e = ellipse.eccentricity.evalf()
-=======
-    e = ellipse.eccentricity.evalf()
->>>>>>> 76efc06243c0a6d35a4d95e5e79f20141d56c699
->>>>>>> 74cbfc718e636f8d8b87bb7fab90a06396321210
+
     a = ellipse.hradius
     b = ellipse.vradius
 
@@ -89,7 +82,6 @@ def ellipse_points2(ellipse, n = 12):
         angle = i*(2*pi/n)
         x = a*np.cos(angle)
         y = b*np.sin(angle)
-<<<<<<< HEAD
         x = x.__round__(6)
         y = y.__round__(6)
         points[i] = [x, y]
@@ -97,14 +89,6 @@ def ellipse_points2(ellipse, n = 12):
 
 # Iterations Information
 n = 250
-=======
-        points[i] = [x,y]
-        #i += 1
-    return points
-
-# Iterations Information
-n = 200
->>>>>>> 74cbfc718e636f8d8b87bb7fab90a06396321210
 nGauges = 12
 a = np.zeros(n)
 b = linspace(b,1.2*b,n)
