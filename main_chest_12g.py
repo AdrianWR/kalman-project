@@ -255,7 +255,7 @@ def ellipse_animation(ellipses, filtered_radius, path = None):
 trueData = json.load(open("ellipses.json","r"))
 nSamples = trueData.__len__()
 nGauges = trueData[0]['radius_of_curvature'].__len__()
-#ellipse_animation(trueData)
+#ellipse_animation(trueData, trueData[0]['radius_of_curvature'])
 
 
 ### Function Models - Storage Retrieval
