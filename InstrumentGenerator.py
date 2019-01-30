@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 import numpy as np
 import os.path
 import random
@@ -150,7 +151,7 @@ class RandomVariable(object):
 
 class ApproximationError(RandomVariable):
     
-    def __init__(self, strainGauge1 = 0, strainGauge2 = 0):
+    def __init__(self, strainGauge1 = 0, strainGauge2 = 0, plot = False):
         
         if (strainGauge1 == 0 and strainGauge2 == 0):
             RandomVariable.__init__(self)
@@ -158,11 +159,13 @@ class ApproximationError(RandomVariable):
             print('Random state variable is unequal on models. Assuming distribution of first argument.')
             strainGauge2.rho = strainGauge1.rho
         else:
-            realizationArray = strainGauge1.realizationArray - strainGauge2.realizationArray
-            RandomVariable.__init__(self, realizationArray.mean(), realizationArray.std(),'uniform')
+            error = strainGauge1.realizationArray - strainGauge2.realizationArray
+            RandomVariable.__init__(self, error.mean(), error.std(),'uniform')
+            if plot:
+                self.plotApproximationError(error)
         pass
 
-    def simulateApproximationError(self, simulationSamples, re_simulate = False):
+    def simulateApproximationError(self, simulationSamples, re_simulate = False, plot = False):
         
         Filename = 'ApproximationError.json'
 
@@ -191,54 +194,45 @@ class ApproximationError(RandomVariable):
             err.uniformLowHigh(-500, 500)
             sgReal = StrainGauge(Rzero, c, rho, Gf, err = err)
         
-            self.__init__(sgApproximate,sgReal)
+            self.__init__(sgApproximate,sgReal, plot = plot)
             with open(Filename, "w") as write_file:
                 json.dump(self.__dict__, write_file)
         
+    def plotApproximationError(self, error):
+
+        plt.rc('text', usetex=True)
+        plt.rc('font', family='serif')
+
+        t = np.arange(0, len(error))
+        fig, ax1 = plt.subplots(figsize = (10,6))
+        line = ax1.plot(np.full((len(error),1), error.mean()))[0]
+        line.set_color('red')
+        scat = ax1.scatter(t, error, s=1)
+        scat.set_color('white')
+        scat.set_edgecolor('green')
+        line.set_label(r'$\bar{\epsilon_a}$' + ' = ' + str(np.round(error.mean(),5)))
+        scat.set_label('Amostras ' + r'$\bar{\epsilon_a}$')
+        plt.xlabel(r'n')
+        plt.ylabel('Erro de Aproximacao ' + r'$(\Omega)$')
+        #plt.title('Iterações do Erro de Aproximação')
+        ax1.legend(prop={'size':14})
+        plt.savefig('./media/ApproximationError.png', dpi=96)
+        #plt.show()
 
 # ######################### #
 # Prior Approximation Error #
 # ######################### #
-
-# def simulateApproximationError(ApproximationError, simulationSamples):
-        
-        
-#                                                                 # Number of samples to test
-#          # Radius of curvature
-
-#         ### Approximate Strain Gauge Model
-#         Rzero         = 9000    # Initial resistance
-#         c             = 1.7    # Strain gauge half length (mm)
-#         Gf            = 8      # Gauge factor
-#         sgApproximate = StrainGauge(Rzero, c, rho, Gf)
-
-#         ### Real Strain Gauge Model
-#         Rzero     = RandomVariable(9000, 100, 'gaussian')    # Initial resistance
-#         c         = RandomVariable(1.7, 0, 'nonRandom')    # Strain gauge half length (mm)
-#         Gf        = RandomVariable(8, 1, 'gaussian')       # Gauge factor
-#         err       = RandomVariable(0, 0,'uniform')
-#         err.uniformLowHigh(-0.5, 0.5)
-#         sgReal = ig.StrainGauge(Rzero, c, rho, Gf, err = err)
-
-#         ### Approximation Error Random Variable
-#         #return ig.ApproximationError(sgApproximate,sgReal)
 
 # ##################
 # Class Testing Area
 # ##################
 if __name__ == '__main__':
     
-    rho   = RandomVariable(10, 0.5, 'gaussian', 5)
-    rho2  = RandomVariable(10, 0.5, 'gaussian', 5)
-    Rzero = RandomVariable(2,1,'gaussian')
-    c     = RandomVariable(2)
-    Gf    = RandomVariable(8,1,'gaussian')
-    dev   = RandomVariable(dist = 'uniform')
-    dev.uniformLowHigh(-0.05,0.05)
+    approxErr = ApproximationError()
+    approxErr.simulateApproximationError(4000, re_simulate = True, plot = True)
 
-
-    R1 = StrainGauge(Rzero, c, rho, Gf, err = 0)
-    R2 = StrainGauge(3,2,rho2,8, err = dev)
-    eps = ApproximationError(R1, R2)
+    #R1 = StrainGauge(Rzero, c, rho, Gf, err = 0)
+    #R2 = StrainGauge(3,2,rho2,8, err = dev)
+    #eps = ApproximationError(R1, R2)
 
     print('ok')

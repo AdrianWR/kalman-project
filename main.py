@@ -28,7 +28,7 @@ approxErr.simulateApproximationError(4000, re_simulate = False)
 ### Function Models - Storage Retrieval
 
 # CHANGE HERE!!!
-model_required = 2
+model_required = 1
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -36,7 +36,7 @@ for model in models:
 
 ### Computational Parameters
 
-n = 400
+n = 1000
 t = np.array(range(1,n+1))
 def y(t): return eval(model["function"])
 rho = ig.RandomVariable(0, 0, 'nonRandom', n)
@@ -111,59 +111,32 @@ error_covariance    = array(Filtered.P)
 ################
 
 
-
+imgDirectory = './media/' + model['name'] + '/'
 for i in range(len(xTrue[0])):
 
     plt.figure(i, figsize = (10,6))
     plt.subplot(211)
-    plt.plot(yMeasured[:,i], label = 'Measurement: R' + str(i))
-    plt.plot(yEstimated[:,i], label = 'Estimation: R' + str(i))
+    plt.plot(yMeasured[:,i], label = 'Medidas: R' + str(i))
+    plt.plot(yEstimated[:,i], label = 'Estimativas: R' + str(i))
     #plt.ylim(yMeasured.min()*0.95, yMeasured.max()*1.05)
-    plt.ylabel('Resistance (' + r'$\Omega$' + ')')
-    plt.title('Strain Gauge Resistance')
+    plt.ylabel('Resistencia (' + r'$\Omega$' + ')')
+    plt.title('Resistencia do Extensometro')
     plt.legend()
 
     plt.subplot(212)
-    plt.plot(xEstimated[:,i],'g-', label = 'Estimation: R' + str(i))
-    plt.plot(xTrue[:,i], label = 'True: ' + r'$\rho$' + str(i))
+    plt.plot(xEstimated[:,i],'g-', label = 'Estimativa: ' + r'$\rho$' + str(i))
+    plt.plot(xTrue[:,i], label = 'Verdadeiro: ' + r'$\rho$' + str(i))
     plt.ylim(0, xTrue.max()*1.5)
-    plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
-    plt.title('Radius of Curvature')
+    plt.ylabel('Raio de Curvatura (' + r'$\rho$' + ')')
+    plt.title('Raio de Curvatura')
     plt.legend()
 
-    plt.show()
+    #plt.show()
+    plt.savefig(imgDirectory + "estimativa.png", dpi=96)
 
-#OLD CODE
-
-# plt.figure(1)#num = 1, figsize=(8,8))
-# plt.rc('text', usetex=True)
-# plt.rc('font', family='serif')
-# #plt.tight_layout()
-
-# #plt.subplot(211)
-# plt.plot(yTrue,'k', label = 'R - True')
-# plt.plot(yMeasured[:,0],'r.', label = 'R - Measurements')
-# plt.plot(yEstimated[:,0], 'b-', label = 'R - Estimated')
-# plt.ylim(yTrue.min()*0.95, yTrue.max()*1.05)
-# plt.ylabel('Resistance (' + r'$\Omega$' + ')')
-# plt.title('Strain Gauge Resistance')
-# plt.legend()
-# #plt.show()
-
-# plt.figure(2)
-# #plt.subplot(212)
-# #plt.plot(radius_measurement, 'g--', label = 'Measured')
-# plt.plot(xEstimated[:,0],'g-', label = 'Estimated')
-# plt.plot(xTrue[:,0], label = 'True')
-# plt.ylabel('Radius of Curvature (' + r'$\rho$' + ')')
-# plt.title('Radius of Curvature')
-# plt.legend()
-# #plt.yscale('log')
-
-# plt.show()
-
-plt.figure(1)
-plt.plot(error_covariance[:,0], label = 'Error Covariance')
-plt.title('Error Covariance')
-plt.legend()
-plt.show()
+plt.figure(1, figsize = (10,3))
+plt.plot(error_covariance[:,0], label = 'Covariancia do Erro')
+plt.title('Covariancia do Estado')
+plt.ylabel('Covariancia da Resistencia (' + r'$\Omega^2$' + ')')
+#plt.legend()
+plt.savefig(imgDirectory + "covariancia.png", dpi=96)
