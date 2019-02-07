@@ -28,7 +28,7 @@ approxErr.simulateApproximationError(4000, re_simulate = False, plot = False)
 ### Function Models - Storage Retrieval
 
 # CHANGE HERE!!!
-model_required = 1
+model_required = 3
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -110,7 +110,7 @@ error_covariance    = array(Filtered.P)
 ### PLOTTING ###
 ################
 
-
+plt.rc('font', size=12) 
 imgDirectory = './media/' + model['name'] + '/'
 for i in range(len(xTrue[0])):
 

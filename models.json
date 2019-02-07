@@ -8,31 +8,31 @@
             "initial_x" : [15],
             "initial_p" : [100],
             "transition_matrix" : [1],
-            "process_covariance": [0.01]
+            "process_covariance": [1]
         }
     },
 
     {   
         "id"        : 2,
         "name"      : "linear",
-        "function"  : "-0.25*t + 300",
+        "function"  : "0.05*t + 50",
         "filter_parameters": {
             "initial_x" : [15],
             "initial_p" : [100],
             "transition_matrix" : [1],
-            "process_covariance": [0.01]
+            "process_covariance": [1]
         }
     },
 
     {   
         "id"        : 3,
         "name"      : "sine",
-        "function"  : "100*np.sin(0.005*t+100) + 100",
+        "function"  : "25*np.sin(0.05*t) + 50",
         "filter_parameters": {
             "initial_x" : [15],
             "initial_p" : [100],
             "transition_matrix" : [1],
-            "process_covariance": [0.01]
+            "process_covariance": [1]
         }
     },
 

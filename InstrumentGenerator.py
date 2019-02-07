@@ -201,7 +201,7 @@ class ApproximationError(RandomVariable):
     def plotApproximationError(self, error):
 
         plt.rc('text', usetex=True)
-        plt.rc('font', family='serif')
+        plt.rc('font', family='serif', size=18)
 
         t = np.arange(0, len(error))
         fig, ax1 = plt.subplots(figsize = (10,6))
