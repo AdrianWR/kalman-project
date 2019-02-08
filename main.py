@@ -28,7 +28,7 @@ approxErr.simulateApproximationError(4000, re_simulate = False, plot = False)
 ### Function Models - Storage Retrieval
 
 # CHANGE HERE!!!
-model_required = 3
+model_required = 1
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -138,12 +138,21 @@ for i in range(len(xTrue[0])):
     #plt.show()
     plt.savefig(imgDirectory + "estimativa.png", dpi=96)
 
-plt.figure(1, figsize = (10,3))
+error = xEstimated[:,i]-xTrue[:,i]
+error = np.abs(error[:,0])
+plt.figure(1, figsize = (10,8))
+plt.subplot(211)
+plt.plot(error,'r', label = 'Erro')
+plt.title('Erro de Estimativa')
+plt.ylabel('Raio de Curvatura ' + r'$\rho$ (mm)')
+plt.xlabel('Amostras')
+plt.subplot(212)
 plt.plot(error_covariance[:,0], label = 'Covariancia do Erro')
 plt.title('Covariancia do Estado')
 plt.ylabel('Covariancia da Resistencia (' + r'$\Omega^2$' + ')')
 plt.xlabel('Amostras')
 plt.tight_layout()
+#plt.show()
 plt.savefig(imgDirectory + "covariancia.png", dpi=96)
 
 print("Execution Done. Model used: " + model['name'] + ".")
