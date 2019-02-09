@@ -198,58 +198,47 @@ def ellipse_animation(ellipses, filtered_radius, path = None):
                 plt.show()
 
 
-# def ellipse_animation2(ellipses, radius_filtered):  
-    
-#     t = np.linspace(0, 2*np.pi, 100)
-#     fig = plt.figure()
-#     ax = fig.add_subplot(1,1,1)
-#     ax = plt.axes(xlim=(-160, 160), ylim=(-160, 160))
+def ellipse_animation2(ellipses, filtered_ellipses, path = None):  
 
-#     scat = ax.scatter([],[], s=100)
-#     scat.set_color('white')
-#     scat.set_edgecolor('red')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.set(xlim=(-160, 160), ylim=(-160, 160))
 
-#     line = ax.plot([], [], lw=2)[0]
-#     line.set_data([], [])
-#     line.set_color('blue')
-#     line.set_linestyle('-')
+        t = np.linspace(0, 2*np.pi, 100)
+        a, b = ellipses[0]['semiaxis']
+        x, y = [a*np.cos(t), b*np.sin(t)]
+        line = ax.plot(x, y, lw=2)[0]
+        line.set_color('blue')
+        line.set_linestyle('-')
+        line.set_label('Geometria Verdadeira')
 
-#     arrows = ax.quiver([], [])
-#     arrows.set_color('orange')
-#     arrows.set_label('True Radius of Curvature')
+        a, b = filtered_ellipses[0]['odr_semiaxis']
+        x, y = [a*np.cos(t), b*np.sin(t)]
+        line2 = ax.plot(x, y, lw=2)[0]
+        line2.set_color('red')
+        line2.set_linestyle('-')
+        line2.set_label('Geometria Reconstruida por ODR')
 
-#     filteredArrows = ax.quiver([], [])
-#     filteredArrows.set_color('magenta')
-#     filteredArrows.set_label('Filtered Radius of Curvature')
+        plt.title('Reconstrucao Geometrica Toracica')
+        ax.legend(loc = 1)
 
-#     ax.legend()
-
-#     def update(i, fig, line, scat, arrows, filteredArrows):
+        def update(i, fig, line, line2):
         
-#         a, b = ellipses[i]['semiaxis']
-#         x, y = [a*np.cos(t), b*np.sin(t)]
-#         line.set_data(x, y)
+                a, b = ellipses[i]['semiaxis']
+                x, y = [a*np.cos(t), b*np.sin(t)]
+                line.set_data(x, y)
 
-#         coord = array(ellipses[i]['coordinates'])
-#         scat.set_offsets(coord)
+                a, b = filtered_ellipses[i]['odr_semiaxis']
+                x, y = [a*np.cos(t), b*np.sin(t)]
+                line2.set_data(x, y)
 
-#         x, y = np.transpose(np.array(ellipses[i]['coordinates']))
-#         theta = np.arctan2(y,x)
-#         rho = np.array(ellipses[i]['radius_of_curvature'])
-#         u,v = [rho*np.cos(theta)*-1, rho*np.sin(theta)*-1]
-#         arrows.set_offsets(coord)
-#         arrows.set_UVC(u, v)
+                return line, line2,
 
-#         filteredArrows.set_offsets(coord)
-#         u,v = [radius_filtered[i]*np.cos(theta)*-1, radius_filtered[i]*np.sin(theta)*-1]
-#         filteredArrows.set_UVC(u, v)
-
-#         return line, scat, arrows, filteredArrows,
-
-#     anim = FuncAnimation(fig, update, fargs = (fig, line, scat, arrows, filteredArrows), frames=20, interval=50, blit=True)
-#     #anim.save('ellipse_animation.mp4', writer='magick')    
-#     plt.show()
-
+        anim = FuncAnimation(fig, update, fargs = (fig, line, line2), frames=len(ellipses)-1, interval=50, blit=True)
+        if path:
+                anim.save(path + 'ellipse_animation.mp4', writer = 'ffmpeg')
+        else:
+                plt.draw()
+                plt.show()
 
 # Modeling
 trueData = json.load(open("ellipses.json","r"))
@@ -381,41 +370,43 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
 # Covariance Trace
-plt.figure(0, figsize = (10,6))
-plt.title('Traco da Matriz de Covariancias de Estado')
-ax0 = plt.subplot(1,1,1)
-ax0.plot(covariance_trace, label = 'Trace', c = 'g')
-ax0.set_xlabel('n')
-ax0.set_ylabel('Traco da Covariancia ' + r'$(\Omega^2)$')
-ax0.set_yscale('log')
-ax0.set_yticks([10,100,1000])
-plt.savefig(imgDirectory + "covariance_trace.png", dpi=96)
+# plt.figure(0, figsize = (10,6))
+# plt.title('Traco da Matriz de Covariancias de Estado')
+# ax0 = plt.subplot(1,1,1)
+# ax0.plot(covariance_trace, label = 'Trace', c = 'g')
+# ax0.set_xlabel('n')
+# ax0.set_ylabel('Traco da Covariancia ' + r'$(\Omega^2)$')
+# ax0.set_yscale('log')
+# ax0.set_yticks([10,100,1000])
+# plt.savefig(imgDirectory + "covariance_trace.png", dpi=96)
 
 # Strain Gauges
-for i in range(0, nGauges):
+# for i in range(0, nGauges):
 
-    plt.figure(i+1, figsize = (10,6))
-    plt.subplot(211)
-    plt.plot(array([k['yMeasured'] for k in data])[:,i], label = 'Medida: R' + str(i))
-    plt.plot(array([k['yEstimated'] for k in data])[:,i], label = 'Estimativa: R' + str(i))
-    plt.ylabel('Resistencia (' + r'$\Omega$' + ')')
-    plt.title('Resistencia do Extensometro')
-    plt.legend()
+#     plt.figure(i+1, figsize = (10,6))
+#     plt.subplot(211)
+#     plt.plot(array([k['yMeasured'] for k in data])[:,i], label = 'Medida: R' + str(i))
+#     plt.plot(array([k['yEstimated'] for k in data])[:,i], label = 'Estimativa: R' + str(i))
+#     plt.ylabel('Resistencia (' + r'$\Omega$' + ')')
+#     plt.title('Resistencia do Extensometro')
+#     plt.legend()
 
-    plt.subplot(212)
-    plt.plot(array([k['xEstimated'] for k in data])[:,i],'g-', label = 'Estimativa: ' + r'$\rho$' + str(i))
-    plt.plot(array([k['xTrue'] for k in data])[:,i], label = 'Verdadeiro: ' + r'$\rho$' + str(i))
-    plt.ylim(0, data[i]['xTrue'].max()*1.5)
-    plt.ylabel('Raio de Curvatura (' + r'$\rho$' + ')')
-    plt.title('Raio de Curvatura')
-    plt.legend()
-    plt.tight_layout
-    plt.savefig(imgDirectory + "torax_expanding_" + str(i) + ".png", dpi=96)
+#     plt.subplot(212)
+#     plt.plot(array([k['xEstimated'] for k in data])[:,i],'g-', label = 'Estimativa: ' + r'$\rho$' + str(i))
+#     plt.plot(array([k['xTrue'] for k in data])[:,i], label = 'Verdadeiro: ' + r'$\rho$' + str(i))
+#     plt.ylim(0, data[i]['xTrue'].max()*1.5)
+#     plt.ylabel('Raio de Curvatura (' + r'$\rho$' + ')')
+#     plt.title('Raio de Curvatura')
+#     plt.legend()
+#     plt.tight_layout
+#     plt.savefig(imgDirectory + "torax_expanding_" + str(i) + ".png", dpi=96)
 
 # Reconstructions
-for i in [0, 50, 150, 249]:
-        path = imgDirectory + 'reconstruction_frame_' + str(i) + '.png'
-        draw_ellipse3(trueData[i], data[i], path)
+#for i in [0, 50, 150, 249]:
+#        path = imgDirectory + 'reconstruction_frame_' + str(i) + '.png'
+#        draw_ellipse3(trueData[i], data[i], path)
+path = imgDirectory + 'odr_'
+ellipse_animation2(trueData, data, path)
 
 print('Traco da ultima Pk: ' + str(covariance_trace[nSamples-1]))
 print('Mediana dos tracos de Pk: ' + str(np.median(covariance_trace)))
