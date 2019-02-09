@@ -19,7 +19,7 @@ from subprocess import check_output
 #############################################
 
 approxErr = ig.ApproximationError()
-approxErr.simulateApproximationError(4000, re_simulate = False)
+approxErr.simulateApproximationError(4000, re_simulate = False, plot = False)
 
 ############################
 ###  SIMULATION ANALYSIS ###
@@ -110,33 +110,49 @@ error_covariance    = array(Filtered.P)
 ### PLOTTING ###
 ################
 
-
+plt.rc('font', size=12) 
 imgDirectory = './media/' + model['name'] + '/'
 for i in range(len(xTrue[0])):
 
-    plt.figure(i, figsize = (10,6))
+    plt.figure(i, figsize = (10,8))
+    
     plt.subplot(211)
-    plt.plot(yMeasured[:,i], label = 'Medidas: R' + str(i))
-    plt.plot(yEstimated[:,i], label = 'Estimativas: R' + str(i))
+    plt.plot(yMeasured[:,i], label = 'Medidas')
+    plt.plot(yEstimated[:,i], label = 'Estimativas')
     #plt.ylim(yMeasured.min()*0.95, yMeasured.max()*1.05)
     plt.ylabel('Resistencia (' + r'$\Omega$' + ')')
+    plt.xlabel('Amostras')
     plt.title('Resistencia do Extensometro')
     plt.legend()
 
     plt.subplot(212)
-    plt.plot(xEstimated[:,i],'g-', label = 'Estimativa: ' + r'$\rho$' + str(i))
-    plt.plot(xTrue[:,i], label = 'Verdadeiro: ' + r'$\rho$' + str(i))
+    plt.plot(xEstimated[:,i],'g-', label = 'Estimativas')
+    plt.plot(xTrue[:,i], label = 'Valores Verdadeiros')
     plt.ylim(0, xTrue.max()*1.5)
-    plt.ylabel('Raio de Curvatura (' + r'$\rho$' + ')')
+    plt.ylabel('Raio de Curvatura ' + r'$\rho$ (mm)')
+    plt.xlabel('Amostras')
     plt.title('Raio de Curvatura')
     plt.legend()
+    plt.tight_layout()
 
     #plt.show()
     plt.savefig(imgDirectory + "estimativa.png", dpi=96)
 
-plt.figure(1, figsize = (10,3))
+error = xEstimated[:,i]-xTrue[:,i]
+error = np.abs(error[:,0])
+plt.figure(1, figsize = (10,8))
+plt.subplot(211)
+plt.plot(error,'r', label = 'Erro')
+plt.title('Erro de Estimativa')
+plt.ylabel('Raio de Curvatura ' + r'$\rho$ (mm)')
+plt.xlabel('Amostras')
+plt.subplot(212)
 plt.plot(error_covariance[:,0], label = 'Covariancia do Erro')
 plt.title('Covariancia do Estado')
 plt.ylabel('Covariancia da Resistencia (' + r'$\Omega^2$' + ')')
-#plt.legend()
+plt.xlabel('Amostras')
+plt.tight_layout()
+#plt.show()
 plt.savefig(imgDirectory + "covariancia.png", dpi=96)
+
+print("Execution Done. Model used: " + model['name'] + ".")

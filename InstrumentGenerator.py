@@ -191,7 +191,7 @@ class ApproximationError(RandomVariable):
             c         = RandomVariable(1.7, 0, 'nonRandom')    # Strain gauge half length (mm)
             Gf        = RandomVariable(8, 1, 'gaussian')       # Gauge factor
             err       = RandomVariable(0, 0,'uniform')
-            err.uniformLowHigh(-0.5, 0.5)
+            err.uniformLowHigh(-500, 500)
             sgReal = StrainGauge(Rzero, c, rho, Gf, err = err)
         
             self.__init__(sgApproximate,sgReal, plot = plot)
@@ -201,7 +201,7 @@ class ApproximationError(RandomVariable):
     def plotApproximationError(self, error):
 
         plt.rc('text', usetex=True)
-        plt.rc('font', family='serif')
+        plt.rc('font', family='serif', size=18)
 
         t = np.arange(0, len(error))
         fig, ax1 = plt.subplots(figsize = (10,6))
