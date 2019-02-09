@@ -46,6 +46,7 @@ def ellipse_points(ellipse, n = 12):
     dtheta = 0
     C = ellipse.circumference.evalf()
     e = ellipse.eccentricity.evalf()
+
     a = ellipse.hradius
     b = ellipse.vradius
 
