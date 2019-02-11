@@ -13,7 +13,7 @@ import json
 from matplotlib.animation import FuncAnimation, writers
 from numpy import array, transpose
 from subprocess import check_output
-
+MODEL = 5
 
 #############################################
 ### APPROXIMATION ERROR METHOD SIMULATION ###
@@ -249,7 +249,7 @@ nGauges = trueData[0]['radius_of_curvature'].__len__()
 
 ### Function Models - Storage Retrieval
 
-model_required = 6
+model_required = MODEL
 models = json.load(open("models.json","r"))
 for model in models:
     if model["id"] == model_required:
@@ -328,6 +328,10 @@ for i in range(0, nSamples):
 #xEstimated  = array(Filtered.x)
 #yEstimated  = h(xEstimated) - approxErr.mean
 covariance_trace = [k.trace() for k in Filtered.P]
+#with open("covariance_trace.json", "w") as write_file:
+#        cov_external = {'model' : model["id"] , 'trace' : covariance_trace}
+#        json.dump(cov_external, write_file)
+#        write_file.write("\n")
 
 ###################
 ### ODR Fitting ###
