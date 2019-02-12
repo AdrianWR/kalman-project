@@ -3,9 +3,9 @@
     {   
         "id"        : 1,
         "name"      : "constant",
-        "function"  : "np.full(t.shape, 10)",
+        "function"  : "np.full(t.shape, 200)",
         "filter_parameters": {
-            "initial_x" : [15],
+            "initial_x" : [100],
             "initial_p" : [100],
             "transition_matrix" : [1],
             "process_covariance": [1]
@@ -15,9 +15,9 @@
     {   
         "id"        : 2,
         "name"      : "linear",
-        "function"  : "0.05*t + 50",
+        "function"  : "0.05*t + 100",
         "filter_parameters": {
-            "initial_x" : [15],
+            "initial_x" : [100],
             "initial_p" : [100],
             "transition_matrix" : [1],
             "process_covariance": [1]
@@ -27,9 +27,9 @@
     {   
         "id"        : 3,
         "name"      : "sine",
-        "function"  : "25*np.sin(0.05*t) + 50",
+        "function"  : "25*np.sin(0.02*t) + 100",
         "filter_parameters": {
-            "initial_x" : [15],
+            "initial_x" : [100],
             "initial_p" : [100],
             "transition_matrix" : [1],
             "process_covariance": [1]

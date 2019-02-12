@@ -13,7 +13,7 @@ import json
 from matplotlib.animation import FuncAnimation, writers
 from numpy import array, transpose
 from subprocess import check_output
-MODEL = 5
+MODEL = 6
 
 #############################################
 ### APPROXIMATION ERROR METHOD SIMULATION ###
@@ -248,7 +248,6 @@ nGauges = trueData[0]['radius_of_curvature'].__len__()
 
 
 ### Function Models - Storage Retrieval
-
 model_required = MODEL
 models = json.load(open("models.json","r"))
 for model in models:
@@ -351,6 +350,7 @@ fitModel = scipy.odr.Model(Rcurvature)
 x = np.linspace(0, 2*np.pi, nGauges)
 sx = np.ones(nGauges)*((x[1]-x[0])/2)
 
+odr_list = []
 fitted_parameters = np.zeros([nSamples,2])
 for i in range(nSamples):
         #y = xEstimated[i]
@@ -361,7 +361,12 @@ for i in range(nSamples):
         out = odr.run()
         #fitted_parameters[i] = out.beta
         data[i]['odr_semiaxis'] = out.beta
+        odr_list.append(out.beta.tolist())
 
+with open("odr_reconstruction_"+ str(model["id"]) +".json", "w") as write_file:
+        cov_external = {'model' : model["id"] , 'odr_semiaxis' : odr_list}
+        json.dump(cov_external, write_file, indent=2)
+        write_file.write("\n")
 
 ################
 ### PLOTTING ###

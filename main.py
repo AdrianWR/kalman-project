@@ -12,6 +12,7 @@ import kalman
 import json
 from numpy import array, transpose
 from subprocess import check_output
+MODEL = 3
 
 
 #############################################
@@ -27,11 +28,9 @@ approxErr.simulateApproximationError(4000, re_simulate = False, plot = False)
 
 ### Function Models - Storage Retrieval
 
-# CHANGE HERE!!!
-model_required = 1
 models = json.load(open("models.json","r"))
 for model in models:
-    if model["id"] == model_required:
+    if model["id"] == MODEL:
         break
 
 ### Computational Parameters
@@ -149,10 +148,14 @@ plt.xlabel('Amostras')
 plt.subplot(212)
 plt.plot(error_covariance[:,0], label = 'Covariancia do Erro')
 plt.title('Covariancia do Estado')
-plt.ylabel('Covariancia da Resistencia (' + r'$\Omega^2$' + ')')
+plt.ylabel('Covariancia de ' + r'$\rho\,(mm^2)$')
 plt.xlabel('Amostras')
 plt.tight_layout()
 #plt.show()
 plt.savefig(imgDirectory + "covariancia.png", dpi=96)
 
 print("Execution Done. Model used: " + model['name'] + ".")
+#print('Ultima Pk: ' + str(error_covariance[nSamples-1]))
+print('Mediana do erro: ' + str(np.median(error)))
+print('Mediana de Pk: ' + str(np.median(error_covariance)))
+print("Término do Programa.")
